@@ -109,55 +109,49 @@ void Render::glVertex(double x , double y){
     x_coor = x_view + (int)((x+1)*view_width/2);
     y_coor = y_view + (int)((-y + 1) * view_height / 2);
     matrix[x_coor][y_coor] = COLOR_VERTEX;
-    cout << to_string(COLOR_VERTEX[0]) <<endl;
 };
 void Render::glFinish(){
   // Crear archivo
-  ofstream archivo("miImagen.bmp");
+  ofstream archivo;
+  archivo.open("renderized.bmp");
   // File type data
-  unsigned char B = 'B';
-  unsigned char M = 'M';
-  unsigned int size = 14 + 40 + width * height * 3;
-  unsigned int reserved = 0;
-  unsigned int pixelDataOffset = 14 + 40;
+  char B = 'B';
+  char M = 'M';
+  int size = 14 + 40 + (width * height * 3);
+  int reserved = 0;
+  int pixelDataOffset = 14 + 40;
   archivo << B;
   archivo << M;
-  archivo << size;
-  archivo << reserved;
-  archivo << pixelDataOffset;
+  archivo << size; // 14+40+(w*h*3)
+  archivo << reserved; //0
+  archivo << pixelDataOffset; //54
 
   //Image information data
-  unsigned int headerSize = 40;
-  unsigned short planes =1; 
-  unsigned short bitsPerPixel= 24;
-  unsigned int compression = 0;
-  unsigned int varios = 0;
-  unsigned int imageSize = this->width * this->height * 3 ;
-  archivo << headerSize ;
-  archivo << width;
+  int headerSize = 40;
+  short planes =1; 
+  short bitsPerPixel= 24;
+  int compression = 0;
+  int imageSize = width * height * 3 ;
+  int varios = 0;
+  archivo << headerSize ; //40
+  archivo << width; 
   archivo << height;
-  archivo << planes ;
-  archivo << bitsPerPixel;
-  archivo << compression;
-  archivo << imageSize;
-  
-  archivo << varios;
-  archivo << varios;
-  archivo << varios;
-  archivo << varios;
-
-  //Color pallete
+  archivo << planes; //1
+  archivo << bitsPerPixel; //24
+  archivo << compression; //0
+  archivo << imageSize; // w *h*3
+  archivo << varios; //0
+  archivo << varios; //0
+  archivo << varios; //0
+  archivo << varios; //0
+  //Color pallete (NONE)
 
   //Raw pixel data
-  cout << "Tamaño de  un pixel "<<sizeof(matrix[1][2][0]) <<endl;
   for (int i = 0 ;i < height ; i++){
     for (int j = 0 ; j < width ; j++){
-      unsigned char r = matrix[i][j][0];
-      unsigned char g = matrix[i][j][1];
-      unsigned char b = matrix[i][j][2];
-      archivo << b;
-      archivo << g;
-      archivo << r;
+      for (int k = 0 ; k < 3 ; k++){
+        archivo << (char) matrix[i][j][k];
+      }
     }
   }
   archivo.close();
@@ -168,6 +162,7 @@ Render::~Render(){
 
 // Main function
 int main(){
+  //Implementacion
   Render r;
   r.glInit();
   r.glCreateWindow(10,10);
@@ -176,8 +171,5 @@ int main(){
   r.glViewPort(1,2,5,5);
   r.glVertex(-1.0,1.0);
   r.glFinish();
-  // cout << sizeof(unsigned int) << endl; -- 4
-  // cout << sizeof(unsigned short) << endl; -- 2
-  // cout << sizeof(unsigned char) << endl; -- 1
 }
 
