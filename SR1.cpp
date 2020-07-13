@@ -152,7 +152,7 @@ void Render::glVertex(double x , double y){
     //x,y son decimales pertenecientes a [-1,1]
     int x_coor,y_coor = 0;
     x_coor = x_view + (int)((x+1)*view_width/2);
-    y_coor = y_view + (int)((-y + 1) * view_height / 2);
+    y_coor = y_view + (int)((y + 1) * view_height / 2);
     matrix[x_coor][y_coor] = COLOR_VERTEX;
 };
 void Render::glFinish(){
@@ -192,7 +192,7 @@ void Render::glFinish(){
   //Color pallete (NONE)
 
   //Raw pixel data
-  for (int i = height -1 ;i >=0 ; i--){
+  for (int i = 0 ;i <height ; i++){
     for (int j = 0 ; j <width ; j++){
       for (int k = 0 ; k < 3 ; k++){
         int valor = matrix[j][i][k];
@@ -219,13 +219,14 @@ int main(){
   r.glInit();
   r.glColor(0.0,0.0,1.0); //Azul
   r.glClearColor(1.0,1.0,1.0); //Blanco
-  r.glCreateWindow(8,8);
+  r.glCreateWindow(20,20);
   r.glClear();
   r.glViewPort(2,2,2,2);
   //Dibujo una linea diagonal
   r.glVertex(-1.0, 1.0);
   r.glVertex(0, 0);
   r.glVertex(1.0, -1.0);
+  r.glVertex(-1.0, -1.0);
   //Guardo el archivo
   r.glFinish();
 }
