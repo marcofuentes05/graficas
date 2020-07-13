@@ -32,6 +32,9 @@
 *.app
 
 #VSCODE
-*.vscode
+*.vscode/
+*.idea/
 #BMP FILES
 *.bmp
+#Archivo del catedrático
+SR1_modificado.cpp
