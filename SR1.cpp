@@ -1,3 +1,9 @@
+/* -------------------------------------------------------------------  
+SR1.cpp
+Algoritmo que escribe un archivo BMP con el nombre de 'renderized.bmp'
+Marco Fuentes - 18188
+Gráficas por computadora - Segundo Semestre 2020 - UVG
+------------------------------------------------------------------- */
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -49,33 +55,72 @@ void Render::glInit(){
   glColor(0.0, 0.0, 0.0);
 };
 void Render::glCreateWindow(int width, int height){
-  this->width = width;
-  this->height = height;
-  this ->view_height = height;
-  this->view_width = width;
-  matrix = new int**[width];
-  for (int i = 0 ; i<width;i++){
-    matrix[i] = new int*[height];
-    for(int j =0;j<height;j++){
+  // Limpiar memoria en caso exista anteriormente
+  int w = this->width;
+  int h = this->height;
+  if (this->width > 0){
+    for (int i=0;i<w;i++){
+      for(int j = 0 ; j< h ; j++){
+        delete [] matrix[i][j];
+      }
+      delete [] matrix[i];
+    }
+    delete [] matrix;
+  }
+
+  // BMP solo acepta dimensiones multiplos de 4
+  int modw = width%4;
+  int modh = width % 4;
+  if(modw == 0){
+    this->width = width;
+    this->view_width = width;
+  }else{
+    this->width = width + (4-modw);
+    this->view_width = width + (4-modw);
+  }
+  if (modh==0){
+    this->height = height;
+    this->view_height = height;
+  }else{
+    this->height = height + (4-modh);
+    this->view_height = height + (4-modh);
+  }
+  
+  //Crear nueva matriz dinamica
+  matrix = new int**[this->width];
+  for (int i = 0 ; i< this->width;i++){
+    matrix[i] = new int*[this->height];
+    for(int j =0;j< this->height;j++){
       matrix[i][j] = new int[3];
     };
   };
 };
 void Render::glViewPort(int x , int y ,int width , int height){
-  x_view = x;
-  y_view = y;
-  view_height=height;
-  view_width = width;
+  try{
+    if ((x+width <= this->width) && (y+height <= this->height) ){
+      x_view = x;
+      y_view = y;
+      view_height=height;
+      view_width = width;
+    }else{
+      throw 1;
+    }
+  }catch(int error){
+    if (error ==1){
+      cout<<"ERROR: Viewport no puede salirse de la ventana"<<endl;
+      exit(0);
+    }
+  }
 }
 void Render::glClearColor(double r, double g, double b){
-  this->COLOR_CLEAR[0] = int(r*255);
+  this->COLOR_CLEAR[2] = int(r*255);
   this->COLOR_CLEAR[1] = int(g * 255);
-  this->COLOR_CLEAR[2] = int(b * 255);
+  this->COLOR_CLEAR[0] = int(b * 255);
 };
 void Render::glColor(double r, double g, double b){
-  this->COLOR_VERTEX[0] = (r * 255);
+  this->COLOR_VERTEX[2] = (r * 255);
   this->COLOR_VERTEX[1] = (g * 255);
-  this->COLOR_VERTEX[2] = (b * 255);
+  this->COLOR_VERTEX[0] = (b * 255);
 };
 string Render::toString(){
   return "Width: "+to_string(width)+"\nHeight: "+to_string(height);
@@ -113,18 +158,18 @@ void Render::glVertex(double x , double y){
 void Render::glFinish(){
   // Crear archivo
   ofstream archivo;
-  archivo.open("renderized.bmp");
+  archivo.open("renderized.bmp" , ios::binary);
   // File type data
   char B = 'B';
   char M = 'M';
   int size = 14 + 40 + (width * height * 3);
   int reserved = 0;
   int pixelDataOffset = 14 + 40;
-  archivo << B;
-  archivo << M;
-  archivo << size; // 14+40+(w*h*3)
-  archivo << reserved; //0
-  archivo << pixelDataOffset; //54
+  archivo.write((char*)&B , sizeof(B)) ;
+  archivo.write((char*)&M , sizeof(M)) ;
+  archivo.write((char*)&size , sizeof(size)) ; // 14+40+(w*h*3)
+  archivo.write((char*)&reserved , sizeof(reserved)) ; //0
+  archivo.write((char*)&pixelDataOffset , sizeof(pixelDataOffset)) ; //54
 
   //Image information data
   int headerSize = 40;
@@ -133,31 +178,38 @@ void Render::glFinish(){
   int compression = 0;
   int imageSize = width * height * 3 ;
   int varios = 0;
-  archivo << headerSize ; //40
-  archivo << width; 
-  archivo << height;
-  archivo << planes; //1
-  archivo << bitsPerPixel; //24
-  archivo << compression; //0
-  archivo << imageSize; // w *h*3
-  archivo << varios; //0
-  archivo << varios; //0
-  archivo << varios; //0
-  archivo << varios; //0
+  archivo.write((char*)&headerSize , sizeof(headerSize))  ; //40
+  archivo.write((char*)&width , sizeof(width)) ; 
+  archivo.write((char*)&height , sizeof(height)) ;
+  archivo.write((char*)&planes , sizeof(planes)) ; //1
+  archivo.write((char*)&bitsPerPixel , sizeof(bitsPerPixel)) ; //24
+  archivo.write((char*)&compression , sizeof(compression)) ; //0
+  archivo.write((char*)&imageSize , sizeof(imageSize)) ; // w *h*3
+  archivo.write((char*)&varios , sizeof(varios)) ; //0
+  archivo.write((char*)&varios , sizeof(varios)) ; //0
+  archivo.write((char*)&varios , sizeof(varios)) ; //0
+  archivo.write((char*)&varios , sizeof(varios)) ; //0
   //Color pallete (NONE)
 
   //Raw pixel data
-  for (int i = 0 ;i < height ; i++){
-    for (int j = 0 ; j < width ; j++){
+  for (int i = height -1 ;i >=0 ; i--){
+    for (int j = 0 ; j <width ; j++){
       for (int k = 0 ; k < 3 ; k++){
-        archivo << (char) matrix[i][j][k];
+        int valor = matrix[j][i][k];
+        archivo.write((char *)&valor , 1);
       }
     }
   }
   archivo.close();
 };
 Render::~Render(){
-  delete matrix;
+  for (int i=0;i<width;i++){
+    // for(int j = 0 ; j< height ; j++){
+    //   delete [] matrix[i][j];
+    // }
+    delete [] matrix[i];
+  }
+  delete [] matrix;
 };
 
 // Main function
@@ -165,11 +217,15 @@ int main(){
   //Implementacion
   Render r;
   r.glInit();
-  r.glCreateWindow(10,10);
+  r.glColor(0.0,0.0,1.0); //Azul
+  r.glClearColor(1.0,1.0,1.0); //Blanco
+  r.glCreateWindow(8,8);
   r.glClear();
-  r.glColor(1.0,1.0,1.0);
-  r.glViewPort(1,2,5,5);
-  r.glVertex(-1.0,1.0);
+  r.glViewPort(2,2,2,2);
+  //Dibujo una linea diagonal
+  r.glVertex(-1.0, 1.0);
+  r.glVertex(0, 0);
+  r.glVertex(1.0, -1.0);
+  //Guardo el archivo
   r.glFinish();
 }
-
