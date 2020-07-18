@@ -18,3 +18,10 @@ string getMatrix(); //Retorna la matriz de valores RBG como un string.
 ```
 
 Estos métodos están todos implementados en la función ```main``` de ```SR1.cpp```.
+
+## Laboratorio 2: SR2
+
+Esta entrega se basa en ```SR1.cpp```, agregándole el método ```glLine(double x0, double y0, double x1, double y1)```, junto con algunos _helper methods_ dentro de la clase Render. 
+
+Al correr el archivo ```SR2.cpp```, se creará ```SR2.bmp```, que sirve como evidencia de su funcionamiento:
+![Esta imagen fue generada con SR2](./SR2.bmp "SR2")
