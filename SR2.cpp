@@ -1,6 +1,7 @@
 /* -------------------------------------------------------------------  
 SR2.cpp
-Algoritmo que escribe un archivo BMP con el nombre de 'renderized.bmp'
+Algoritmo que escribe un archivo BMP con el nombre de 'SR2.bmp',
+implementando glLine().
 Marco Fuentes - 18188
 Gráficas por computadora - Segundo Semestre 2020 - UVG
 ------------------------------------------------------------------- */
