@@ -170,7 +170,9 @@ void Render::glVertex(double x , double y){
     int x_coor,y_coor = 0;
     x_coor =GDCtoPixels(x, true);
     y_coor = GDCtoPixels(y, false);
-    matrix[x_coor][y_coor] = COLOR_VERTEX;
+    matrix[y_coor][x_coor][0] = COLOR_VERTEX[0];
+    matrix[y_coor][x_coor][1] = COLOR_VERTEX[1];
+    matrix[y_coor][x_coor][2] = COLOR_VERTEX[2];
 };
 void Render::glLine(double x0, double y0, double x1, double y1){
   //Convertir coordenadas en pixeles
@@ -206,10 +208,14 @@ void Render::glLine(double x0, double y0, double x1, double y1){
 
   for (int x = x_0 ; x<x_1+1 ; x++){
     if (esV){
-      matrix[y][x] = COLOR_VERTEX;
+      matrix[y][x][0] = COLOR_VERTEX[0];
+      matrix[y][x][1] = COLOR_VERTEX[1];
+      matrix[y][x][2]  = COLOR_VERTEX[2];
     }
     else{
-      matrix[x][y] = COLOR_VERTEX;
+      matrix[x][y][0] = COLOR_VERTEX[0];
+      matrix[x][y][1] = COLOR_VERTEX[1];
+      matrix[x][y][2] = COLOR_VERTEX[2];
     }
     offset = offset + m;
     if (offset > limit){
@@ -280,9 +286,9 @@ void Render::glFinish(){
 };
 Render::~Render(){
   for (int i=0;i<width;i++){
-    // for(int j = 0 ; j< height ; j++){
-    //   delete [] matrix[i][j];
-    // }
+    for(int j = 0 ; j< height ; j++){
+      delete [] matrix[i][j];
+    }
     delete [] matrix[i];
   }
   delete [] matrix;
@@ -295,9 +301,9 @@ int main(){
   r.glInit();
   r.glColor(0.0,0.0,1.0); //Azul
   r.glClearColor(0.0,1.0,0.0); 
-  r.glCreateWindow(1000,1000);
+  r.glCreateWindow(600,600);
   r.glClear();
-  r.glViewPort(200,200,600,600);
+  r.glViewPort(100,100,400,400);
   
   for (double i = 0.0 ; i<1;i = i + 0.01){
     double ld[2] = { -1 , -1  +2*i };
