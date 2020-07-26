@@ -125,7 +125,7 @@ void OBJ::read(){
       }else if (temp == "f "){
         vector<string> components = explode ( line , ' ');
         faces[contFaces] = new int*[ components.size() - 1 ];
-        facesLen[contFaces] = components.size();
+        facesLen[contFaces] = components.size() - 1;
         int contadorItem = 0;
         for (auto item : components ){
           if(item != "f"){
@@ -133,8 +133,14 @@ void OBJ::read(){
             int facesContador = 0;
             vector<string> coords = explode( item , '/' );
             for(auto coord : coords){
-              faces[contFaces][contadorItem][facesContador] = stoi(coord);
-              facesContador++;
+              int i = 5;
+              string str = coord;
+              try{
+                faces[contFaces][contadorItem][facesContador] = stoi(str);
+                facesContador++;
+              }
+              catch (std::invalid_argument d){
+              }
             }
             contadorItem++;
           }
@@ -150,16 +156,18 @@ int*** OBJ::getFaces(){
   return this->faces;
 }  
 int OBJ::getNumFaces(){
-  cout << "HOLA LLEGAMOS" << endl;
   return numFaces;
 }
+int *OBJ::getFacesLen(){
+  return facesLen;
+}
+double** OBJ::getVertices(){
+  return vertices;
+}
+int OBJ::getNumVertices(){
+  return numVertices;
+}
 OBJ::~OBJ(){
-  /*
-  ***faces 
-  **vertices 
-  **normals 
-  **texcoords
-  */
   // DESTROY **vertices
   for  (int i = 0 ; i < numVertices ; i++ ){
     delete[] vertices[i];
@@ -186,12 +194,7 @@ OBJ::~OBJ(){
     delete[] faces[i];
   }
   delete[] faces;
+
   // DESTROY facesLen
   delete[] facesLen;
-}
-
-int main (){
-  OBJ o("cube.obj");
-  o.read();
-  return 0;
 }

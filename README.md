@@ -25,3 +25,18 @@ Esta entrega se basa en ```SR1.cpp```, agregándole el método ```glLine(double 
 
 Al correr el archivo ```SR2.cpp```, se creará ```SR2.bmp```, que sirve como evidencia de su funcionamiento:
 ![Esta imagen fue generada con SR2](./SR2.bmp "SR2")
+
+## Tarea 3: SR3
+
+Esta entrega se basa en ```SR2.cpp```. Junto con el desarrollo de ```OBJ.cpp```, produce un wireframe del modelo ```face.obj```.
+
+Dado que se incluyen distintos archivos, se deben compilar todos antes de compilar ```SR3.cpp```, de la siguiente manera:
+```
+g++ *.cpp -o outpu
+```
+, y ejecutarse de esta manera:
+```
+./output
+```
+. Finalmente, el resultado será:
+![Esta imagen fue generada con SR3](./Render.bmp "Render")

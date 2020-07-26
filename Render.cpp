@@ -6,7 +6,6 @@ Marco Fuentes - 18188
 Gráficas por computadora - Segundo Semestre 2020 - UVG
 ------------------------------------------------------------------- */
 #include "Render.hpp"
-#include "OBJ.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -316,7 +315,7 @@ void Render::glFinish()
 {
   // Crear archivo
   ofstream archivo;
-  archivo.open("SR2.bmp", ios::binary);
+  archivo.open("Render.bmp", ios::binary);
   // File type data
   char B = 'B';
   char M = 'M';
@@ -363,12 +362,30 @@ void Render::glFinish()
   }
   archivo.close();
 };
-void Render::loadModel(string name){
-  // OBJ obj(name);
-  // obj.read();
-  // for (int i = 0 ; i < model.getNumFaces() ; i++){
-  //   cout<< "LLEGAMOS" << endl;
-  // }
+void Render::loadModel(string name , int transform[2] , int scale[2]){
+  OBJ obj(name);
+  obj.read();
+  int numFaces = obj.getNumFaces();
+  int* facesLen = obj.getFacesLen();
+  int *** faces = obj.getFaces();
+  double** vertices = obj.getVertices();
+  double v0[2];
+  double v1[2];
+  for (int i = 0 ; i < numFaces ; i++){
+    for (int j = 0 ; j < facesLen[i] ; j++){
+      v0[0] = vertices[ faces[i][ j ][ 0 ] - 1 ][0];
+      v0[1] = vertices[ faces[i][ j ][ 0 ] - 1 ][1];
+
+      v1[0] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][0];
+      v1[1] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][1];
+
+      int x0 = int(v0[0]*scale[0] + transform[0]) % width ;
+      int y0 =int(v0[1]*scale[1] + transform[1]) % height ;
+      int x1 = int(v1[0] * scale[0] + transform[0]) % width ;
+      int y1 = int(v1[1] * scale[1] + transform[1]) % height ;
+      glLineAbs(x0,y0,x1,y1);
+    }
+  }
 };
 //DESTRUCTOR
 Render::~Render(){
@@ -382,21 +399,3 @@ Render::~Render(){
   }
   delete[] matrix;
 };
-
-// Main function
-int main()
-{
-  //Implementacion
-  Render r;
-  r.glInit();
-  r.glColor(0.0, 0.0, 1.0); //Azul
-  r.glClearColor(0.0, 1.0, 0.0);
-  r.glCreateWindow(600, 600);
-  r.glClear();
-  r.glViewPort(100, 100, 400, 400);
-  int a[2] = {0, 0};
-  OBJ o("cube.obj");
-  // r.loadModel("cube.obj");
-  //Guardo el archivo
-  r.glFinish();
-}

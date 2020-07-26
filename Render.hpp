@@ -1,11 +1,14 @@
 #ifndef RENDER_H
-#define RENDER_H  
+#define RENDER_H
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cstring>
 #include <vector>
+
+#include "OBJ.hpp"
+
 using namespace std;
 /*----------------------------------------------------------------
 Idea de ***matrix obtenida de Stack Overflow:
@@ -29,7 +32,7 @@ public:
   void glLineAbs(int x0, int y0, int x1, int y1);
   void glDrawSquare(double *ld, double *lu, double *rd, double *ru);
   void glDrawPolygon(int vertices[][2], int size);
-  void loadModel(string name);
+  void loadModel(string name, int transform[2], int scale[2]);
   void glFinish();
   string toString();
   string getMatrix();

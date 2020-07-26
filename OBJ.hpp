@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -23,6 +24,9 @@ class OBJ{
     void read();
     int*** getFaces();
     int getNumFaces();
+    int* getFacesLen();
+    double** getVertices();
+    int getNumVertices();
     ~OBJ();
 };
 
