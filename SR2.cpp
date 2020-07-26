@@ -37,25 +37,13 @@ class Render{
     void glVertex(double x, double y);
     void glColor(double r, double g, double b);
     void glLine(double x0, double y0, double x1, double y1);
+    void glLine_abs(int x0, int y0, int x1, int y1);
     void glDrawSquare(double *ld , double *lu , double *rd , double *ru);
     void glFinish();
     string toString(); 
     string getMatrix();
     int GDCtoPixels(double x , bool isX);
-    void test(){
-      matrix[0][0][0] = 1; //superior izquierda
-      matrix[0][0][1] = 1;
-      matrix[0][0][2] = 1;
-      matrix[width-1][height -1][0] = 1;//inferior derecha
-      matrix[width-1][height -1][1] = 1;
-      matrix[width-1][height -1][2] = 1;
-      matrix[width - 1][0][0] = 1;//superior derecha
-      matrix[width - 1][0][1] = 1;
-      matrix[width - 1][0][2] = 1;
-      matrix[0][height - 1][0] = 1;//inferior izquierda
-      matrix[0][height - 1][1] = 1;
-      matrix[0][height - 1][2] = 1;
-    };
+    void drawPolygon(int[][2] , int );
     ~Render();
 };
 void Render::glInit(){
@@ -230,11 +218,73 @@ void Render::glLine(double x0, double y0, double x1, double y1){
   }
 
 }
+void Render::glLine_abs(int x_0, int y_0, int x_1, int y_1){
+  int dx = abs(x_1 - x_0);
+  int dy = abs(y_1 - y_0);
+
+  bool esV = dy > dx;
+  if (esV)
+  {
+    swap(x_0, y_0);
+    swap(x_1, y_1);
+  }
+
+  if (x_0 > x_1)
+  {
+    swap(x_0, x_1);
+    swap(y_0, y_1);
+  }
+
+  double offset = 0.0;
+  double limit = 0.5;
+
+  dx = abs(x_1 - x_0);
+  dy = abs(y_1 - y_0);
+
+  double m;
+  m = double(dy) / double(dx);
+  int y = y_0;
+
+  for (int x = x_0; x < x_1 + 1; x++)
+  {
+    if (esV)
+    {
+      matrix[y][x][0] = COLOR_VERTEX[0];
+      matrix[y][x][1] = COLOR_VERTEX[1];
+      matrix[y][x][2] = COLOR_VERTEX[2];
+    }
+    else
+    {
+      matrix[x][y][0] = COLOR_VERTEX[0];
+      matrix[x][y][1] = COLOR_VERTEX[1];
+      matrix[x][y][2] = COLOR_VERTEX[2];
+    }
+    offset = offset + m;
+    if (offset > limit)
+    {
+      if (y_0 < y_1)
+      {
+        y = y + 1;
+      }
+      else
+      {
+        y = y - 1;
+      }
+
+      limit = limit + 1;
+    }
+  }
+}
 void Render::glDrawSquare(double *ld, double *lu, double *rd, double *ru){
   glLine(ld[0], ld[1], lu[0], lu[1]);
   glLine(lu[0], lu[1], ru[0], ru[1]);
   glLine(ru[0], ru[1], rd[0], rd[1]);
   glLine(rd[0], rd[1], ld[0], ld[1]);
+}
+void Render::drawPolygon(int arr[][2] ,  int size){
+  for ( int i = 0 ; i < size ; i++){
+    glLine_abs(arr[i][0], arr[i][1], arr[(i+1)%size][0], arr[(i+1)%size][1]);
+  }
 }
 //Todos son arrays de dos elementos indicando las coordenadas del vertice
 void Render::glFinish(){
@@ -312,6 +362,9 @@ int main(){
     double rd[2] = {1 - 2 * i, -1};
     r.glDrawSquare(ld ,lu ,rd, ru);
   }
+
+  int lista[][2] = { {165, 380} , {185, 360} , {180, 330} , {207, 345} , {233, 330} , {230, 360} , {250, 380} , {220, 385} , {205, 410} , {193, 383} };
+  r.drawPolygon(lista , 10 ); 
 
   //Guardo el archivo
   r.glFinish();
