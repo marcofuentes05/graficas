@@ -7,11 +7,11 @@ using namespace std;
 
 class OBJ{
   string name;
-  int numVertices = 0;
-  int numNormals = 0;
-  int numTexCoord = 0;
-  int numFaces = 0;
-  double **vertices ;
+  int numVertices;
+  int numNormals;
+  int numTexCoord;
+  int numFaces;
+  double **vertices;
   double **normals ;
   double **texcoords;
   int ***faces ;

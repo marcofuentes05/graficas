@@ -10,7 +10,7 @@ Gráficas por computadora - Segundo Semestre 2020 - UVG
 #include <cstring>
 #include <vector>
 #include "OBJ.hpp"
-using namespace std;
+using namespace std; 
 /*
 Funcion explode (string ,  char) inspirada en PHP, copiada de
 http://www.cplusplus.com/articles/2wA0RXSz/ 
@@ -30,11 +30,20 @@ const vector<string> explode(const string &s, const char &c){
     v.push_back(buff);
   return v;
 }
-
+ 
 OBJ::OBJ(){
+  numVertices = 0;
+  numNormals = 0;
+  numTexCoord = 0;
+  numFaces = 0;
   name = "";
+  cout << "CONSTRUCTOR POR DEFECTO" <<endl;
 }
 OBJ::OBJ(string name){
+  numVertices = 0;
+  numNormals = 0;
+  numTexCoord = 0;
+  numFaces = 0;
   // Abrir archivo
   this->name = name;
   archivo.open(name , ios::in);
@@ -139,7 +148,7 @@ void OBJ::read(){
 };
 int*** OBJ::getFaces(){
   return this->faces;
-}
+}  
 int OBJ::getNumFaces(){
   cout << "HOLA LLEGAMOS" << endl;
   return numFaces;
@@ -180,6 +189,7 @@ OBJ::~OBJ(){
   // DESTROY facesLen
   delete[] facesLen;
 }
+
 int main (){
   OBJ o("cube.obj");
   o.read();

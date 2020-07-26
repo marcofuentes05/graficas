@@ -5,11 +5,11 @@ representando un wireframde de un modelo OBJ.
 Marco Fuentes - 18188
 Gráficas por computadora - Segundo Semestre 2020 - UVG
 ------------------------------------------------------------------- */
+#include "Render.hpp"
+#include "OBJ.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "Render.hpp"
-#include "OBJ.hpp"
 using namespace std;
 
 //Helper functions.
@@ -363,16 +363,15 @@ void Render::glFinish()
   }
   archivo.close();
 };
-void Render::loadModel(string name, int translate[2], int scale[2]){
-  OBJ model(name);
-  model.read();
+void Render::loadModel(string name){
+  // OBJ obj(name);
+  // obj.read();
   // for (int i = 0 ; i < model.getNumFaces() ; i++){
   //   cout<< "LLEGAMOS" << endl;
   // }
 };
-    //DESTRUCTOR
-    Render::~Render()
-{
+//DESTRUCTOR
+Render::~Render(){
   for (int i = 0; i < width; i++)
   {
     for (int j = 0; j < height; j++)
@@ -396,7 +395,8 @@ int main()
   r.glClear();
   r.glViewPort(100, 100, 400, 400);
   int a[2] = {0, 0};
-  r.loadModel("cube.obj", a, a);
+  OBJ o("cube.obj");
+  // r.loadModel("cube.obj");
   //Guardo el archivo
   r.glFinish();
 }

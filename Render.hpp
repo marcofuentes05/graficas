@@ -1,3 +1,6 @@
+#ifndef RENDER_H
+#define RENDER_H  
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -14,7 +17,6 @@ class Render
   int ***matrix;
   int COLOR_CLEAR[3];
   int COLOR_VERTEX[3];
-
 public:
   void glInit();
   void glCreateWindow(int width, int height);
@@ -27,7 +29,7 @@ public:
   void glLineAbs(int x0, int y0, int x1, int y1);
   void glDrawSquare(double *ld, double *lu, double *rd, double *ru);
   void glDrawPolygon(int vertices[][2], int size);
-  void loadModel(string name , int translate[2] , int scale[2]);
+  void loadModel(string name);
   void glFinish();
   string toString();
   string getMatrix();
@@ -37,3 +39,4 @@ public:
 
 void swap(int *a, int *b);
 int abs(int m);
+#endif
