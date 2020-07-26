@@ -32,7 +32,7 @@ Esta entrega se basa en ```SR2.cpp```. Junto con el desarrollo de ```OBJ.cpp```,
 
 Dado que se incluyen distintos archivos, se deben compilar todos antes de compilar ```SR3.cpp```, de la siguiente manera:
 ```
-g++ *.cpp -o outpu
+g++ SR3.cpp Render.cpp OBJ.cpp -o output
 ```
 , y ejecutarse de esta manera:
 ```
