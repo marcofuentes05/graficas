@@ -136,10 +136,16 @@ void OBJ::read(){
               int i = 5;
               string str = coord;
               try{
-                faces[contFaces][contadorItem][facesContador] = stoi(str);
+                int value = stoi(str);
+                if (value < 0){
+                  value = value * (-1);
+                }
+                faces[contFaces][contadorItem][facesContador] = value;
                 facesContador++;
               }
               catch (std::invalid_argument d){
+                cout << "Archivo corrupto. Revisar indentaciones." << endl;
+                exit(1);
               }
             }
             contadorItem++;

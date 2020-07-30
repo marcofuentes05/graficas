@@ -369,10 +369,13 @@ void Render::loadModel(string name , int transform[2] , int scale[2]){
   int* facesLen = obj.getFacesLen();
   int *** faces = obj.getFaces();
   double** vertices = obj.getVertices();
+  cout <<"NUMFACES: "<<numFaces<< endl;
   double v0[2];
   double v1[2];
   for (int i = 0 ; i < numFaces ; i++){
     for (int j = 0 ; j < facesLen[i] ; j++){
+      // cout << vertices[faces[i][j][0] -1 ][0]<< endl;
+      // exit(1);
       v0[0] = vertices[ faces[i][ j ][ 0 ] - 1 ][0];
       v0[1] = vertices[ faces[i][ j ][ 0 ] - 1 ][1];
 
@@ -383,8 +386,14 @@ void Render::loadModel(string name , int transform[2] , int scale[2]){
       int y0 =int(v0[1]*scale[1] + transform[1]) % height ;
       int x1 = int(v1[0] * scale[0] + transform[0]) % width ;
       int y1 = int(v1[1] * scale[1] + transform[1]) % height ;
+
+      x0 = x0<0 ? x0*(-1) : x0;
+      y0 = y0<0 ? y0*(-1) : y0;
+      x1 = x1<0 ? x1*(-1) : x1;
+      y1 = y1<0 ? y1*(-1) : y1; 
       glLineAbs(x0,y0,x1,y1);
     }
+    
   }
 };
 //DESTRUCTOR
