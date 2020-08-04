@@ -9,6 +9,9 @@ Gráficas por computadora - Segundo Semestre 2020 - UVG
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <limits>
+#include <algorithm>
+#include <stdlib.h>
 using namespace std;
 
 //Helper functions.
@@ -39,18 +42,19 @@ void Render::glCreateWindow(int width, int height)
   // Limpiar memoria en caso exista anteriormente
   int w = this->width;
   int h = this->height;
-  if (this->width > 0)
-  {
-    for (int i = 0; i < w; i++)
-    {
-      for (int j = 0; j < h; j++)
-      {
+  if (this->width > 0){
+    for (int i = 0; i < w; i++){
+      for (int j = 0; j < h; j++){
         delete[] matrix[i][j];
       }
       delete[] matrix[i];
+      delete[] zbuffer[i];
     }
     delete[] matrix;
+    delete[] zbuffer;
   }
+
+
 
   // BMP solo acepta dimensiones multiplos de 4
   int modw = width % 4;
@@ -78,9 +82,11 @@ void Render::glCreateWindow(int width, int height)
 
   //Crear nueva matriz dinamica
   matrix = new int **[this->width];
+  zbuffer = new double*[this->width];
   for (int i = 0; i < this->width; i++)
   {
     matrix[i] = new int *[this->height];
+    zbuffer[i] = new double [this->height];
     for (int j = 0; j < this->height; j++)
     {
       matrix[i][j] = new int[3];
@@ -152,6 +158,8 @@ void Render::glClear()
   {
     for (int j = 0; j < width; j++)
     {
+
+      zbuffer[i][j] = -1 * std::numeric_limits<double>::infinity();
       for (int k = 0; k < 3; k++)
       {
         matrix[j][i][k] = COLOR_CLEAR[k];
@@ -238,24 +246,19 @@ void Render::glLine(double x0, double y0, double x1, double y1)
     }
   }
 }
-void Render::glLineAbs(int x_0, int y_0, int x_1, int y_1)
-{
+void Render::glLineAbs(int x_0, int y_0, int x_1, int y_1 , bool fromOBJ){
   int dx = abs(x_1 - x_0);
   int dy = abs(y_1 - y_0);
 
   bool esV = dy > dx;
-  if (esV)
-  {
+  if (esV){
     swap(x_0, y_0);
     swap(x_1, y_1);
   }
-
-  if (x_0 > x_1)
-  {
+  if (x_0 > x_1){
     swap(x_0, x_1);
     swap(y_0, y_1);
   }
-
   double offset = 0.0;
   double limit = 0.5;
 
@@ -266,32 +269,75 @@ void Render::glLineAbs(int x_0, int y_0, int x_1, int y_1)
   m = double(dy) / double(dx);
   int y = y_0;
 
-  for (int x = x_0; x < x_1 + 1; x++)
-  {
-    if (esV)
-    {
+  for (int x = x_0; x < x_1 + 1; x++){
+    if (esV){
       matrix[y][x][0] = COLOR_VERTEX[0];
       matrix[y][x][1] = COLOR_VERTEX[1];
       matrix[y][x][2] = COLOR_VERTEX[2];
     }
-    else
-    {
+    else{
       matrix[x][y][0] = COLOR_VERTEX[0];
       matrix[x][y][1] = COLOR_VERTEX[1];
       matrix[x][y][2] = COLOR_VERTEX[2];
     }
     offset = offset + m;
-    if (offset > limit)
-    {
-      if (y_0 < y_1)
-      {
+    if (offset > limit){
+      if (y_0 < y_1){
         y = y + 1;
+      }else{
+        y = y - 1;
       }
-      else
+      limit = limit + 1;
+    }
+  }
+}
+void Render::glVertexAbs(int x , int y, int *color){
+  matrix[y][x][0] = color[0];
+  matrix[y][x][1] = color[1];
+  matrix[y][x][2] = color[2];
+};
+void Render::glLineAbsZBuffer(int x_0, int y_0, double z0 ,int x_1, int y_1, double z1)
+{
+  int dx = abs(x_1 - x_0);
+  int dy = abs(y_1 - y_0);
+
+  bool esV = dy > dx;
+  if (esV){
+    swap(x_0, y_0);
+    swap(x_1, y_1);
+  }
+  if (x_0 > x_1){
+    swap(x_0, x_1);
+    swap(y_0, y_1);
+  }
+  double offset = 0.0;
+  double limit = 0.5;
+
+  dx = abs(x_1 - x_0);
+  dy = abs(y_1 - y_0);
+
+  double m;
+  m = double(dy) / double(dx);
+  int y = y_0;
+
+  for (int x = x_0; x < x_1 + 1; x++){
+    if (esV){
+      matrix[y][x][0] = COLOR_VERTEX[0];
+      matrix[y][x][1] = COLOR_VERTEX[1];
+      matrix[y][x][2] = COLOR_VERTEX[2];
+    }else{
+      matrix[x][y][0] = COLOR_VERTEX[0];
+      matrix[x][y][1] = COLOR_VERTEX[1];
+      matrix[x][y][2] = COLOR_VERTEX[2];
+    }
+    offset = offset + m;
+    if (offset > limit){
+      if (y_0 < y_1){
+        y = y + 1;
+      }else
       {
         y = y - 1;
       }
-
       limit = limit + 1;
     }
   }
@@ -311,11 +357,10 @@ void Render::glDrawPolygon(int vertices[][2], int size)
     glLineAbs(vertices[i][0], vertices[i][1], vertices[(i + 1) % size][0], vertices[(i + 1) % size][1]);
   }
 }
-void Render::glFinish()
-{
+void Render::glFinish(string name){
   // Crear archivo
   ofstream archivo;
-  archivo.open("Render.bmp", ios::binary);
+  archivo.open(name, ios::binary);
   // File type data
   char B = 'B';
   char M = 'M';
@@ -362,39 +407,204 @@ void Render::glFinish()
   }
   archivo.close();
 };
-void Render::loadModel(string name , int transform[2] , int scale[2]){
+void Render::glFinishZBuffer(string name){
+  // Crear archivo
+  ofstream archivo;
+  archivo.open(name, ios::binary);
+  // File type data
+  char B = 'B';
+  char M = 'M';
+  int size = 14 + 40 + (width * height * 3);
+  int reserved = 0;
+  int pixelDataOffset = 14 + 40;
+  archivo.write((char *)&B, sizeof(B));
+  archivo.write((char *)&M, sizeof(M));
+  archivo.write((char *)&size, sizeof(size));                       // 14+40+(w*h*3)
+  archivo.write((char *)&reserved, sizeof(reserved));               //0
+  archivo.write((char *)&pixelDataOffset, sizeof(pixelDataOffset)); //54
+
+  //Image information data
+  int headerSize = 40;
+  short planes = 1;
+  short bitsPerPixel = 24;
+  int compression = 0;
+  int imageSize = width * height * 3;
+  int varios = 0;
+  archivo.write((char *)&headerSize, sizeof(headerSize)); //40
+  archivo.write((char *)&width, sizeof(width));
+  archivo.write((char *)&height, sizeof(height));
+  archivo.write((char *)&planes, sizeof(planes));             //1
+  archivo.write((char *)&bitsPerPixel, sizeof(bitsPerPixel)); //24
+  archivo.write((char *)&compression, sizeof(compression));   //0
+  archivo.write((char *)&imageSize, sizeof(imageSize));       // w *h*3
+  archivo.write((char *)&varios, sizeof(varios));             //0
+  archivo.write((char *)&varios, sizeof(varios));             //0
+  archivo.write((char *)&varios, sizeof(varios));             //0
+  archivo.write((char *)&varios, sizeof(varios));             //0
+  //Color pallete (NONE)
+
+  //Raw pixel data
+  for (int i = 0; i < height; i++){
+    for (int j = 0; j < width; j++){
+      for (int k = 0 ; k < 3 ; k ++){
+        int valor = 0;
+        if (zbuffer[j][i] != -1 * std::numeric_limits<double>::infinity()){
+          valor = int((zbuffer[j][i]-minZ ) * 255 / (double)(maxZ - minZ) );
+        }
+        archivo.write((char *)&valor, 1);
+      }
+    }
+  }
+  archivo.close();
+};
+double *Render::baryCoords( double *v1 , double* v2 , double *v3 , double *punto ){
+  double *result = new double[3];
+  try{
+    result[0] = (((v2[1] - v3[1]) * (punto[0] - v3[0]) + (v3[0] - v2[0]) * (punto[1] - v3[1])) / 
+                ((v2[1] - v3[1]) * (v1[0] - v3[0]) + (v3[0] - v2[0]) * (v1[1] - v3[1])));
+    result[1] = ( ((v3[1] - v1[1])*(punto[0] - v3[0]) + (v1[0] - v3[0])*(punto[1] - v3[1]) ) /
+                ((v2[1] - v3[1])*(v1[0] - v3[0]) + (v3[0] - v2[0])*(v1[1] - v3[1])) );
+    result[2] = 1 - result[0] - result[1];
+  }catch(...){
+    result[0] = -1;
+    result[1] = -1;
+    result[2] = -1;
+  }
+  return result;
+};
+
+void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[3]){
+  int minx = int(min(v1[0] , min(v2[0], v3[0])));
+  int miny = int(min(v1[1], min(v2[1], v3[1])));
+
+  int maxx = int(max(v1[0], max(v2[0], v3[0])));
+  int maxy = int(max(v1[1], max(v2[1], v3[1])));
+  for (int i = minx; i <= maxx; i++){
+    for (int j = miny; j <= maxy; j++){
+      double p[2] = {(double)i, (double)j};
+      double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
+      if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
+        double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
+        if (z > zbuffer[i][j]){
+          zbuffer[i][j] = z;
+          glVertexAbs(j, i, color );
+        }
+      }
+      delete[] bary;
+    }
+  }
+}
+
+void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWireframe){
   OBJ obj(name);
   obj.read();
   int numFaces = obj.getNumFaces();
   int* facesLen = obj.getFacesLen();
   int *** faces = obj.getFaces();
   double** vertices = obj.getVertices();
-  cout <<"NUMFACES: "<<numFaces<< endl;
-  double v0[2];
+  double v0[3];
   double v1[2];
-  for (int i = 0 ; i < numFaces ; i++){
-    for (int j = 0 ; j < facesLen[i] ; j++){
-      // cout << vertices[faces[i][j][0] -1 ][0]<< endl;
-      // exit(1);
-      v0[0] = vertices[ faces[i][ j ][ 0 ] - 1 ][0];
-      v0[1] = vertices[ faces[i][ j ][ 0 ] - 1 ][1];
-
-      v1[0] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][0];
-      v1[1] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][1];
-
-      int x0 = int(v0[0]*scale[0] + transform[0]) % width ;
-      int y0 =int(v0[1]*scale[1] + transform[1]) % height ;
-      int x1 = int(v1[0] * scale[0] + transform[0]) % width ;
-      int y1 = int(v1[1] * scale[1] + transform[1]) % height ;
-
-      x0 = x0<0 ? x0*(-1) : x0;
-      y0 = y0<0 ? y0*(-1) : y0;
-      x1 = x1<0 ? x1*(-1) : x1;
-      y1 = y1<0 ? y1*(-1) : y1; 
-      glLineAbs(x0,y0,x1,y1);
+  for(int i = 0 ; i < numFaces ; i++){
+    for(int j = 0 ; j<facesLen[i]; j ++){
+      v0[0] = vertices[faces[i][j][0] - 1][0];
+      v0[1] = vertices[faces[i][j][0] - 1][1];
+      v0[2] = vertices[faces[i][j][0] - 1][2];
+      int x0 = int(v0[0] * scale[0] + transform[0]) % width;
+      int y0 = int(v0[1] * scale[1] + transform[1]) % height;
+      double z0 = v0[2] * scale[2] + transform[2];
+      x0 = x0 < 0 ? x0 * (-1) : x0;
+      y0 = y0 < 0 ? y0 * (-1) : y0;
+      if (z0 < minZ){
+        minZ = z0;
+      }
+      if(z0>maxZ){
+        maxZ = z0;
+      }
     }
-    
   }
+  for (int i = 0 ; i < numFaces ; i++){
+    if (isWireframe) {
+      for (int j = 0 ; j < facesLen[i] ; j++){
+        v0[0] = vertices[ faces[i][ j ][ 0 ] - 1 ][0];
+        v0[1] = vertices[ faces[i][ j ][ 0 ] - 1 ][1];
+
+        v1[0] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][0];
+        v1[1] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][1];
+
+        int x0 = int(v0[0]*scale[0] + transform[0]) % width ;
+        int y0 = int(v0[1]*scale[1] + transform[1]) % height ;
+        int x1 = int(v1[0] * scale[0] + transform[0]) % width ;
+        int y1 = int(v1[1] * scale[1] + transform[1]) % height ;
+
+        x0 = x0<0 ? x0*(-1) : x0;
+        y0 = y0<0 ? y0*(-1) : y0;
+        x1 = x1<0 ? x1*(-1) : x1;
+        y1 = y1<0 ? y1*(-1) : y1; 
+
+        glLineAbs(x0,y0,x1,y1);
+      }
+    }else{
+      double v0[3];
+      double v1[3];
+      double v2[3];
+      double light[3] = {50,100, 100};
+      v0[0] = vertices[ faces[i][0][0] - 1 ][0];
+      v0[1] = vertices[ faces[i][0][0] - 1 ][1];
+      v0[2] = vertices[ faces[i][0][0] - 1 ][2];
+
+      v1[0] = vertices[ faces[i][1][0] - 1][0];
+      v1[1] = vertices[ faces[i][1][0] - 1][1];
+      v1[2] = vertices[ faces[i][1][0] - 1][2];
+
+      v2[0] = vertices[ faces[i][2][0] - 1][0];
+      v2[1] = vertices[ faces[i][2][0] - 1][1];
+      v2[2] = vertices[ faces[i][2][0] - 1][2];
+
+      v0[0] =  (v0[0]*scale[0] +transform[0]);
+      v0[1] =  (v0[1]*scale[1] +transform[1]);
+      v0[2] =  (v0[2]*scale[2] +transform[2]);
+      
+      v1[0] =  (v1[0]*scale[0] +transform[0]);
+      v1[1] =  (v1[1]*scale[1] +transform[1]);
+      v1[2] =  (v1[2]*scale[2] +transform[2]);
+      
+      v2[0] =  (v2[0]*scale[0] +transform[0]);
+      v2[1] =  (v2[1]*scale[1] +transform[1]);
+      v2[2] =  (v2[2]*scale[2] +transform[2]);
+
+      double *d1 = substract(v1, v0, 3); // MUST DELETE[] THIS
+      double *d2 = substract(v2, v0, 3); // MUST DELETE[] THIS
+      double *normal = cross(d1, d2); // MUST DELETE[] THIS
+      double *nnormal = normalize(normal , 3); // MUST DELETE[] THIS
+      double *nlight = normalize(light, 3);    // MUST DELETE[] THIS
+      double intensity = dot(nnormal , nlight , 3);
+      int color[3] = {0,0,0};
+      if (intensity >= 0){
+        color[0] = int(COLOR_VERTEX[0] * intensity);
+        color[1] = int(COLOR_VERTEX[1] * intensity);
+        color[2] = int(COLOR_VERTEX[2] * intensity);
+      };
+      triangle_bc(v0,v1,v2, color);
+      if (facesLen[i] > 3){
+        double v3[3];
+        v3[0] = vertices[faces[i][3][0] - 1][0];
+        v3[1] = vertices[faces[i][3][0] - 1][1];
+        v3[2] = vertices[faces[i][3][0] - 1][2];
+        v3[0] = (v3[0] * scale[0] + transform[0]);
+        v3[1] = (v3[1] * scale[1] + transform[1]);
+        v3[2] = (v3[2] * scale[2] +transform[2]);
+        triangle_bc(v0, v2,v3, color);
+      }
+      delete[] d1;
+      delete[] d2;
+      delete[] normal;
+      delete[] nnormal;
+      delete[] nlight;
+    }
+  }
+  if(!isWireframe){
+    glFinishZBuffer("zbuffer.bmp");
+  }; 
 };
 //DESTRUCTOR
 Render::~Render(){
@@ -405,6 +615,8 @@ Render::~Render(){
       delete[] matrix[i][j];
     }
     delete[] matrix[i];
+    delete[] zbuffer[i];
   }
   delete[] matrix;
+  delete[] zbuffer;
 };
