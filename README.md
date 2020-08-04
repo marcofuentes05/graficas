@@ -44,3 +44,17 @@ g++ SR3.cpp Render.cpp OBJ.cpp -o output
 
 Usando como base ```SR2.cpp``` agregándole los métodos ```pointOnPoligon``` y ```glPoligonFill```, se logró completar el rellenado de todos los polígonos. Al correr el archivo ```LAB1.cpp``` se creará ```LAB1.bmp```, que sirve como evidencia de su funcionamiento:
 ![Esta imagen fue generada con LAB1.cpp](./LAB1.bmp "LAB1")
+
+## Tarea 4: SR4
+
+Esta entrega toma como base la entrega en SR3 y le agrega el concepto de profundidad usando el z-buffer. Este concepto me permite renderizar superficies que estan "frente" a otras, ademas de introducir las sombras a mi GL.
+
+Para ejecutarse, basta con ejecutar los comandos:
+```
+g++ SR4.cpp Render.cpp OBJ.cpp linearALgebra.cpp -o output //Para compilar
+./output //para ejecutar
+```
+
+Finalmente, el programa creará dos archivos bmp: ```SR4``` y ```zbuffer```:
+![Esta imagen fue generada con SR4](./SR4.bmp "SR4")
+![Esta imagen fue generada con SR3](./zbuffer.bmp "Z - BUFFER")
