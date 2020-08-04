@@ -485,15 +485,15 @@ void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[
       double *bary = baryCoords(v1, v2, v3, p); // DELETE THIS
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
-        if (z > zbuffer[i][j]){
+        if ((z-minZ)/rango >= zbuffer[i][j]){
           double pos = z - minZ;
-          zbuffer[i][j] = pos/rango; //Siempre un valor entre 0 y 1
           int color0[3] = {
-            int(255 * pos / rango),
-            int(255 * pos / rango),
-            int(255 * pos / rango),
+            int(color[0] * pos / rango),
+            int(color[1] * pos / rango),
+            int(color[2] * pos / rango),
           };
           glVertexAbs(j, i, color0 );
+          zbuffer[i][j] = pos/rango; //Siempre un valor entre 0 y 1
         }
       }
       delete[] bary;
@@ -553,7 +553,7 @@ void Render::loadModel(string name , int transform[2] , int scale[2] , bool isWi
       double v0[3];
       double v1[3];
       double v2[3];
-      double light[3] = {00,100,100};
+      double light[3] = {100,100,100};
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
       v0[2] = vertices[ faces[i][0][0] - 1 ][2];
@@ -580,23 +580,23 @@ void Render::loadModel(string name , int transform[2] , int scale[2] , bool isWi
       double *normal = cross(d1, d2); // MUST DELETE[] THIS
       double *nnormal = normalize(normal , 3); // MUST DELETE[] THIS
       double intensity = dot(nnormal , light , 3);
+      int color[3] = {0,0,0};
       if (intensity >= 0){
-        int color[3] = {
-          int(COLOR_VERTEX[0] * intensity),
-          int(COLOR_VERTEX[1] * intensity),
-          int(COLOR_VERTEX[2] * intensity),
-        };
-        
-        triangle_bc(v0,v1,v2, color);
-        if (facesLen[i] >3){
-          double v3[3];
-          v3[0] = vertices[faces[i][3][0] - 1][0];
-          v3[1] = vertices[faces[i][3][0] - 1][1];
-          v3[2] = vertices[faces[i][3][0] - 1][2];
-          v3[0] = (v3[0] * scale[0] + transform[0]);
-          v3[1] = (v3[1] * scale[1] + transform[1]);
-          triangle_bc(v0, v2,v3, color);
-        }
+        color[0] = int(COLOR_VERTEX[0] * intensity);
+        color[1] = int(COLOR_VERTEX[1] * intensity);
+        color[2] = int(COLOR_VERTEX[2] * intensity);
+      };
+      triangle_bc(v0,v1,v2, color);
+      if (facesLen[i] >3){
+        double v3[3];
+        v3[0] = vertices[faces[i][3][0] - 1][0];
+        v3[1] = vertices[faces[i][3][0] - 1][1];
+        v3[2] = vertices[faces[i][3][0] - 1][2];
+        v3[0] = int(v3[0] * scale[0] + transform[0]);
+        v3[1] = int(v3[1] * scale[1] + transform[1]);
+        triangle_bc(v0, v2,v3, color);
+        triangle_bc(v0, v1, v3, color);
+        triangle_bc(v1, v2, v3, color);
       }
       delete[] d1;
       delete[] d2;
