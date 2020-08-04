@@ -151,6 +151,7 @@ void OBJ::read(){
             contadorItem++;
           }
         }
+        facesLen[contFaces] = contadorItem;
         contFaces ++;
       }
     }

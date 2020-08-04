@@ -38,7 +38,7 @@ public:
   void glLineAbsZBuffer(int x0, int y0, double z0 , int x1, int y1 , double z1);
   void glDrawSquare(double *ld, double *lu, double *rd, double *ru);
   void glDrawPolygon(int vertices[][2], int size);
-  void loadModel(string name, int transform[2], int scale[2] , bool isWireframe = true);
+  void loadModel(string name, int transform[3], int scale[3] , bool isWireframe = true);
   void glFinish(string name);
   void glFinishZBuffer(string name);
   double *baryCoords(double *v1 , double* v2 , double *v3 , double *punto);

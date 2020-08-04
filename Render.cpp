@@ -11,6 +11,7 @@ Gráficas por computadora - Segundo Semestre 2020 - UVG
 #include <string>
 #include <limits>
 #include <algorithm>
+#include <stdlib.h>
 using namespace std;
 
 //Helper functions.
@@ -448,7 +449,7 @@ void Render::glFinishZBuffer(string name){
       for (int k = 0 ; k < 3 ; k ++){
         int valor = 0;
         if (zbuffer[j][i] != -1 * std::numeric_limits<double>::infinity()){
-          valor = zbuffer[j][i] * 255;
+          valor = int((zbuffer[j][i]-minZ ) * 255 / (double)(maxZ - minZ) );
         }
         archivo.write((char *)&valor, 1);
       }
@@ -476,24 +477,17 @@ void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[
   int minx = int(min(v1[0] , min(v2[0], v3[0])));
   int miny = int(min(v1[1], min(v2[1], v3[1])));
 
-  int maxx = int(max(v1[0], min(v2[0], v3[0])));
-  int maxy = int(max(v1[1], min(v2[1], v3[1])));
-  double rango = maxZ - minZ;
+  int maxx = int(max(v1[0], max(v2[0], v3[0])));
+  int maxy = int(max(v1[1], max(v2[1], v3[1])));
   for (int i = minx; i <= maxx; i++){
     for (int j = miny; j <= maxy; j++){
       double p[2] = {(double)i, (double)j};
-      double *bary = baryCoords(v1, v2, v3, p); // DELETE THIS
+      double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
-        if ((z-minZ)/rango >= zbuffer[i][j]){
-          double pos = z - minZ;
-          int color0[3] = {
-            int(color[0] * pos / rango),
-            int(color[1] * pos / rango),
-            int(color[2] * pos / rango),
-          };
-          glVertexAbs(j, i, color0 );
-          zbuffer[i][j] = pos/rango; //Siempre un valor entre 0 y 1
+        if (z > zbuffer[i][j]){
+          zbuffer[i][j] = z;
+          glVertexAbs(j, i, color );
         }
       }
       delete[] bary;
@@ -501,7 +495,7 @@ void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[
   }
 }
 
-void Render::loadModel(string name , int transform[2] , int scale[2] , bool isWireframe){
+void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWireframe){
   OBJ obj(name);
   obj.read();
   int numFaces = obj.getNumFaces();
@@ -517,17 +511,17 @@ void Render::loadModel(string name , int transform[2] , int scale[2] , bool isWi
       v0[2] = vertices[faces[i][j][0] - 1][2];
       int x0 = int(v0[0] * scale[0] + transform[0]) % width;
       int y0 = int(v0[1] * scale[1] + transform[1]) % height;
+      double z0 = v0[2] * scale[2] + transform[2];
       x0 = x0 < 0 ? x0 * (-1) : x0;
       y0 = y0 < 0 ? y0 * (-1) : y0;
-      if (v0[2] < minZ){
-        minZ = v0[2];
+      if (z0 < minZ){
+        minZ = z0;
       }
-      if(v0[2]>maxZ){
-        maxZ = v0[2];
+      if(z0>maxZ){
+        maxZ = z0;
       }
     }
   }
-
   for (int i = 0 ; i < numFaces ; i++){
     if (isWireframe) {
       for (int j = 0 ; j < facesLen[i] ; j++){
@@ -553,7 +547,7 @@ void Render::loadModel(string name , int transform[2] , int scale[2] , bool isWi
       double v0[3];
       double v1[3];
       double v2[3];
-      double light[3] = {100,100,100};
+      double light[3] = {50,100, 100};
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
       v0[2] = vertices[ faces[i][0][0] - 1 ][2];
@@ -568,18 +562,22 @@ void Render::loadModel(string name , int transform[2] , int scale[2] , bool isWi
 
       v0[0] =  (v0[0]*scale[0] +transform[0]);
       v0[1] =  (v0[1]*scale[1] +transform[1]);
+      v0[2] =  (v0[2]*scale[2] +transform[2]);
       
       v1[0] =  (v1[0]*scale[0] +transform[0]);
       v1[1] =  (v1[1]*scale[1] +transform[1]);
+      v1[2] =  (v1[2]*scale[2] +transform[2]);
       
       v2[0] =  (v2[0]*scale[0] +transform[0]);
       v2[1] =  (v2[1]*scale[1] +transform[1]);
+      v2[2] =  (v2[2]*scale[2] +transform[2]);
 
       double *d1 = substract(v1, v0, 3); // MUST DELETE[] THIS
       double *d2 = substract(v2, v0, 3); // MUST DELETE[] THIS
       double *normal = cross(d1, d2); // MUST DELETE[] THIS
       double *nnormal = normalize(normal , 3); // MUST DELETE[] THIS
-      double intensity = dot(nnormal , light , 3);
+      double *nlight = normalize(light, 3);    // MUST DELETE[] THIS
+      double intensity = dot(nnormal , nlight , 3);
       int color[3] = {0,0,0};
       if (intensity >= 0){
         color[0] = int(COLOR_VERTEX[0] * intensity);
@@ -587,24 +585,26 @@ void Render::loadModel(string name , int transform[2] , int scale[2] , bool isWi
         color[2] = int(COLOR_VERTEX[2] * intensity);
       };
       triangle_bc(v0,v1,v2, color);
-      if (facesLen[i] >3){
+      if (facesLen[i] > 3){
         double v3[3];
         v3[0] = vertices[faces[i][3][0] - 1][0];
         v3[1] = vertices[faces[i][3][0] - 1][1];
         v3[2] = vertices[faces[i][3][0] - 1][2];
-        v3[0] = int(v3[0] * scale[0] + transform[0]);
-        v3[1] = int(v3[1] * scale[1] + transform[1]);
+        v3[0] = (v3[0] * scale[0] + transform[0]);
+        v3[1] = (v3[1] * scale[1] + transform[1]);
+        v3[2] = (v3[2] * scale[2] +transform[2]);
         triangle_bc(v0, v2,v3, color);
-        triangle_bc(v0, v1, v3, color);
-        triangle_bc(v1, v2, v3, color);
       }
       delete[] d1;
       delete[] d2;
       delete[] normal;
       delete[] nnormal;
+      delete[] nlight;
     }
   }
-    glFinishZBuffer("SR4ZBuffer.bmp");
+  if(!isWireframe){
+    glFinishZBuffer("zbuffer.bmp");
+  }; 
 };
 //DESTRUCTOR
 Render::~Render(){
