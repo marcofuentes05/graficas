@@ -9,7 +9,7 @@
 #include <limits>
 #include "OBJ.hpp"
 #include "linearAlgebra.hpp"
-
+#include "Texture.hpp"
 using namespace std;
 /*----------------------------------------------------------------
 Idea de ***matrix obtenida de Stack Overflow:
@@ -24,6 +24,7 @@ class Render
   int COLOR_VERTEX[3];
   double minZ =  std::numeric_limits<double>::infinity();
   double maxZ =  -1*std::numeric_limits<double>::infinity();
+  Texture texture;
 public:
   void glInit();
   void glCreateWindow(int width, int height);
@@ -38,15 +39,17 @@ public:
   void glLineAbsZBuffer(int x0, int y0, double z0 , int x1, int y1 , double z1);
   void glDrawSquare(double *ld, double *lu, double *rd, double *ru);
   void glDrawPolygon(int vertices[][2], int size);
-  void loadModel(string name, int transform[3], int scale[3] , bool isWireframe = true);
+  void loadModel(string name, int transform[3], int scale[3] , bool isWireframe = true, bool hasTexture = false);
   void glFinish(string name);
   void glFinishZBuffer(string name);
+  double *transform(double vector[3] , int transform[3] , int scale[3]);
   double *baryCoords(double *v1 , double* v2 , double *v3 , double *punto);
-  void triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[3]);
+  void triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[3] , double **texcoords, bool hasTexture = false, double intensity = 1);
   void setZBuffer(int x , int y , double value);
   string toString();
   string getMatrix();
   int GDCtoPixels(double x, bool isX);
+  void setTexture(string t);
   ~Render();
 };
 

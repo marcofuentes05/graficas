@@ -174,6 +174,9 @@ double** OBJ::getVertices(){
 int OBJ::getNumVertices(){
   return numVertices;
 }
+double** OBJ::getTexCoords(){
+  return texcoords;
+}
 OBJ::~OBJ(){
   // DESTROY **vertices
   for  (int i = 0 ; i < numVertices ; i++ ){

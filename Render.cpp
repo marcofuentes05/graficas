@@ -1,6 +1,6 @@
 /* -------------------------------------------------------------------  
 Render.cpp
-Algoritmo que escribe un archivo BMP con el nombre de 'SR3.bmp',
+Algoritmo que escribe un archivo BMP con el nombre de 'SR5.bmp',
 representando un wireframde de un modelo OBJ.
 Marco Fuentes - 18188
 Gráficas por computadora - Segundo Semestre 2020 - UVG
@@ -457,6 +457,15 @@ void Render::glFinishZBuffer(string name){
   }
   archivo.close();
 };
+
+double * Render::transform(double vector[3] ,  int transform[3] , int scale[3]){ 
+  double *result = new double[3];
+  result[0] = (vector[0] * scale[0] + transform[0]);
+  result[1] = (vector[1] * scale[1] + transform[1]);
+  result[2] = (vector[2] * scale[2] + transform[2]);
+  return result;
+}
+
 double *Render::baryCoords( double *v1 , double* v2 , double *v3 , double *punto ){
   double *result = new double[3];
   try{
@@ -473,12 +482,15 @@ double *Render::baryCoords( double *v1 , double* v2 , double *v3 , double *punto
   return result;
 };
 
-void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[3]){
+void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[3] , double**texcoords , bool hasTexture , double intensity){
+  int _color[3];
   int minx = int(min(v1[0] , min(v2[0], v3[0])));
   int miny = int(min(v1[1], min(v2[1], v3[1])));
 
   int maxx = int(max(v1[0], max(v2[0], v3[0])));
   int maxy = int(max(v1[1], max(v2[1], v3[1])));
+
+  double b , g , r;
   for (int i = minx; i <= maxx; i++){
     for (int j = miny; j <= maxy; j++){
       double p[2] = {(double)i, (double)j};
@@ -486,8 +498,20 @@ void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
         if (z > zbuffer[i][j]){
+          _color[0] = int(double(color[0]) * intensity);
+          _color[1] = int(double(color[1]) * intensity);
+          _color[2] = int(double(color[2]) * intensity);
+          if(hasTexture){
+            double tx = texcoords[0][0] * bary[0] + texcoords[1][0] * bary[1] + texcoords[2][0]*bary[2];
+            double ty = texcoords[0][1] * bary[0] + texcoords[1][1] * bary[1] + texcoords[2][1]*bary[2];
+            int* texColor = texture.getColor(tx,ty);
+            _color[0] = int(_color[0] * double(texColor[0]) / 255);
+            _color[1] = int(_color[1] * double(texColor[1]) / 255);
+            _color[2] = int(_color[2] * double(texColor[2]) / 255);
+            delete [] texColor;
+          }
           zbuffer[i][j] = z;
-          glVertexAbs(j, i, color );
+          glVertexAbs(j, i, _color );
         }
       }
       delete[] bary;
@@ -495,13 +519,14 @@ void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[
   }
 }
 
-void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWireframe){
+void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWireframe , bool hasTexture){
   OBJ obj(name);
   obj.read();
   int numFaces = obj.getNumFaces();
   int* facesLen = obj.getFacesLen();
   int *** faces = obj.getFaces();
   double** vertices = obj.getVertices();
+  double ** texCoords = obj.getTexCoords();
   double v0[3];
   double v1[2];
   for(int i = 0 ; i < numFaces ; i++){
@@ -547,7 +572,7 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       double v0[3];
       double v1[3];
       double v2[3];
-      double light[3] = {50,100, 100};
+      double light[3] = {00,50, 100};
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
       v0[2] = vertices[ faces[i][0][0] - 1 ][2];
@@ -571,6 +596,45 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       v2[0] =  (v2[0]*scale[0] +transform[0]);
       v2[1] =  (v2[1]*scale[1] +transform[1]);
       v2[2] =  (v2[2]*scale[2] +transform[2]);
+     
+      double vt0[2];
+      double vt1[2];
+      double vt2[2];
+      double vt3[2];
+      double **tcoords = new double*[4];
+      tcoords[0] = new double[2];
+      tcoords[1] = new double[2];
+      tcoords[2] = new double[2];
+      tcoords[3] = new double[2];
+      if(hasTexture){
+        vt0[0] = texCoords[faces[i][0][1] - 1 ][0];
+        vt0[1] = texCoords[faces[i][0][1] - 1 ][1];
+        // vt0[2] = texCoords[faces[i][0][1] - 1 ][2];
+
+        vt1[0] = texCoords[faces[i][1][1] - 1 ][0];
+        vt1[1] = texCoords[faces[i][1][1] - 1 ][1];
+        // vt1[2] = texCoords[faces[i][1][1] - 1 ][2];
+
+        vt2[0] = texCoords[faces[i][2][1] - 1 ][0];
+        vt2[1] = texCoords[faces[i][2][1] - 1 ][1];
+        // vt2[2] = texCoords[faces[i][2][1] - 1 ][2];
+        tcoords[0][0] = vt0[0];
+        tcoords[0][1] = vt0[1];
+        // tcoords[0][2] = vt0[2];
+        tcoords[1][0] = vt1[0];
+        tcoords[1][1] = vt1[1];
+        tcoords[1][2] = vt1[2];
+
+        tcoords[2][0] = vt2[0];
+        tcoords[2][1] = vt2[1];
+        tcoords[2][2] = vt2[2];
+
+        if (facesLen[i]>3){
+          vt3[0] = texCoords[faces[i][3][1] - 1 ][0];
+          vt3[1] = texCoords[faces[i][3][1] - 1 ][1];
+          // vt3[2] = texCoords[faces[i][3][1] - 1 ][2];
+        }
+      }
 
       double *d1 = substract(v1, v0, 3); // MUST DELETE[] THIS
       double *d2 = substract(v2, v0, 3); // MUST DELETE[] THIS
@@ -578,34 +642,52 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       double *nnormal = normalize(normal , 3); // MUST DELETE[] THIS
       double *nlight = normalize(light, 3);    // MUST DELETE[] THIS
       double intensity = dot(nnormal , nlight , 3);
-      int color[3] = {0,0,0};
-      if (intensity >= 0){
+      int color[3] = {50,50,50};
+      
+      if (intensity >= 0){ 
         color[0] = int(COLOR_VERTEX[0] * intensity);
         color[1] = int(COLOR_VERTEX[1] * intensity);
         color[2] = int(COLOR_VERTEX[2] * intensity);
+        triangle_bc(v0,v1,v2, COLOR_VERTEX , tcoords , hasTexture , intensity );
+        if (facesLen[i] > 3){
+          double v3[3];
+          v3[0] = vertices[faces[i][3][0] - 1][0];
+          v3[1] = vertices[faces[i][3][0] - 1][1];
+          v3[2] = vertices[faces[i][3][0] - 1][2];
+          double *v3Transformed = this->transform(v3, transform, scale);
+          if(facesLen[i] > 3){
+            tcoords[3] = vt3; 
+          }
+          triangle_bc(v0, v2,v3, color , tcoords , hasTexture , intensity) ;
+          delete[] v3Transformed;
+        }
       };
-      triangle_bc(v0,v1,v2, color);
-      if (facesLen[i] > 3){
-        double v3[3];
-        v3[0] = vertices[faces[i][3][0] - 1][0];
-        v3[1] = vertices[faces[i][3][0] - 1][1];
-        v3[2] = vertices[faces[i][3][0] - 1][2];
-        v3[0] = (v3[0] * scale[0] + transform[0]);
-        v3[1] = (v3[1] * scale[1] + transform[1]);
-        v3[2] = (v3[2] * scale[2] +transform[2]);
-        triangle_bc(v0, v2,v3, color);
-      }
+
+      // delete[] v0Transformed;
+      // delete[] v1Transformed;
+      // delete[] v2Transformed;
       delete[] d1;
       delete[] d2;
       delete[] normal;
       delete[] nnormal;
       delete[] nlight;
+      delete[] tcoords[0];
+      delete[] tcoords[1];
+      delete[] tcoords[2];
+      delete[] tcoords[3];
+      delete[] tcoords;
     }
   }
   if(!isWireframe){
     glFinishZBuffer("zbuffer.bmp");
   }; 
 };
+
+void Render::setTexture(string t){
+  texture.openFile(t);
+  texture.read();
+};
+
 //DESTRUCTOR
 Render::~Render(){
   for (int i = 0; i < width; i++)

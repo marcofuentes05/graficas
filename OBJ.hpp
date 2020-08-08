@@ -27,6 +27,7 @@ class OBJ{
     int* getFacesLen();
     double** getVertices();
     int getNumVertices();
+    double **getTexCoords();
     ~OBJ();
 };
 
