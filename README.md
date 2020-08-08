@@ -58,3 +58,16 @@ g++ SR4.cpp Render.cpp OBJ.cpp linearALgebra.cpp -o output //Para compilar
 Finalmente, el programa creará dos archivos bmp: ```SR4``` y ```zbuffer```:
 ![Esta imagen fue generada con SR4](./SR4.bmp "SR4")
 ![Esta imagen fue generada con SR3](./zbuffer.bmp "Z - BUFFER")
+
+## Tarea 5: SR5
+
+Esta entrega toma como base la entrega en SR4 y le agrega la funcionalidad de texturas para el renderizado en BMP.
+
+Para ejecutarse, basta con ejecutar los comandos:
+```
+g++ SR5.cpp Render.cpp OBJ.cpp linearALgebra.cpp Texture.cpp -o output //Para compilar
+./output //para ejecutar
+```
+
+Finalmente, el programa creará dos archivos bmp: ```SR4``` y ```zbuffer```:
+![Esta imagen fue generada con SR4](./SR5.bmp "SR5")
