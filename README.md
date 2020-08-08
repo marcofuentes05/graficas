@@ -69,5 +69,5 @@ g++ SR5.cpp Render.cpp OBJ.cpp linearALgebra.cpp Texture.cpp -o output //Para co
 ./output //para ejecutar
 ```
 
-Finalmente, el programa creará dos archivos bmp: ```SR4``` y ```zbuffer```:
+Finalmente, el resultado es:
 ![Esta imagen fue generada con SR4](./SR5.bmp "SR5")
