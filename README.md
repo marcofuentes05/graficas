@@ -70,4 +70,4 @@ g++ SR5.cpp Render.cpp OBJ.cpp linearALgebra.cpp Texture.cpp -o output //Para co
 ```
 
 Finalmente, el resultado es:
-![Esta imagen fue generada con SR4](./SR5.bmp "SR5")
+![Esta imagen fue generada con SR4](./SR5Final.bmp "SR5")
