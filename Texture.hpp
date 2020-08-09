@@ -16,6 +16,7 @@ class Texture{
     void openFile(string path);
     void read();
     int *getColor(double tx, double ty);
+    string getPath();
     ~Texture();
 };
 
