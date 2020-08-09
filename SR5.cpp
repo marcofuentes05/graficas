@@ -35,5 +35,5 @@ int main()
   // r.loadModel("models/coca.obj", transform, scale, false , false);
 
 
-  r.glFinish("LAB2.bmp");
+  r.glFinish("SR5.bmp");
 }
