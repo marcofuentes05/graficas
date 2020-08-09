@@ -30,5 +30,10 @@ int main()
   int scale[3] = {500, 500, 500};
   r.loadModel("models/model.obj", transform, scale, false, true);
   
+  // int transform[3] = {250, 30, 0};
+  // int scale[3] = {5, 5,5};
+  // r.loadModel("models/coca.obj", transform, scale, false , false);
+
+
   r.glFinish("LAB2.bmp");
 }

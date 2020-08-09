@@ -75,5 +75,6 @@ Texture::~Texture(){
     }
     delete[] pixels[i];
   }
-  delete[] pixels;
+  
+  if(height > 0 && width > 0) {delete[] pixels;};
 };

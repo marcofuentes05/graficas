@@ -457,7 +457,6 @@ void Render::glFinishZBuffer(string name){
     }
   }
   archivo.close();
-  cout << "TERMINAMOS" << endl;
 };
 
 double * Render::transform(double vector[3] ,  int transform[3] , int scale[3]){ 
@@ -547,8 +546,6 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       }
     }
   }
-  cout << "MIN Z: "<< minZ << endl;
-  cout << "MAX Z: "<< maxZ << endl;
   for (int i = 0 ; i < numFaces ; i++){ 
     if (isWireframe) {
       for (int j = 0 ; j < facesLen[i] ; j++){
@@ -574,7 +571,7 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       double v0[3];
       double v1[3];
       double v2[3];
-      double light[3] = {10,10, 10};
+      double light[3] = {0,0, 10};
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
       v0[2] = vertices[ faces[i][0][0] - 1 ][2];
@@ -647,39 +644,37 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       double *nlight = normalize(light, 3);    // MUST DELETE[] THIS
       double intensity = dot(nnormal , nlight , 3);
       
-      // if (intensity >= 0){
-        triangle_bc(v0,v1,v2, COLOR_VERTEX , tcoords , hasTexture , intensity );
-        if (facesLen[i] > 3){
-          double v3[3];
-          v3[0] = vertices[faces[i][3][0] - 1][0];
-          v3[1] = vertices[faces[i][3][0] - 1][1];
-          v3[2] = vertices[faces[i][3][0] - 1][2];
-          
-          v3[0] =  (v3[0]*scale[0] +transform[0]);
-          v3[1] =  (v3[1]*scale[1] +transform[1]);
-          v3[2] =  (v3[2]*scale[2] +transform[2]);
+      triangle_bc(v0,v1,v2, COLOR_VERTEX , tcoords , hasTexture , intensity );
+      if (facesLen[i] > 3){
+        double v3[3];
+        v3[0] = vertices[faces[i][3][0] - 1][0];
+        v3[1] = vertices[faces[i][3][0] - 1][1];
+        v3[2] = vertices[faces[i][3][0] - 1][2];
+        
+        v3[0] =  (v3[0]*scale[0] +transform[0]);
+        v3[1] =  (v3[1]*scale[1] +transform[1]);
+        v3[2] =  (v3[2]*scale[2] +transform[2]);
 
-          tcoords[1][0] = tcoords[2][0];
-          tcoords[1][1] = tcoords[2][1];
+        tcoords[1][0] = tcoords[2][0];
+        tcoords[1][1] = tcoords[2][1];
 
-          tcoords[2][0] = vt3[0];
-          tcoords[2][1] = vt3[1]; 
-          triangle_bc(v0, v2,v3, COLOR_VERTEX , tcoords , hasTexture , intensity) ;
-        }
-      // };
+        tcoords[2][0] = vt3[0];
+        tcoords[2][1] = vt3[1]; 
+        triangle_bc(v0, v2,v3, COLOR_VERTEX , tcoords , hasTexture , intensity) ;
+      }
 
       delete[] d1;
       delete[] d2;
       delete[] normal;
       delete[] nnormal;
       delete[] nlight;
-      // if(hasTexture){
-        // delete[] tcoords[0];
-        // delete[] tcoords[1];
-        // delete[] tcoords[2];
-        // delete[] tcoords[3];
-        // delete[] tcoords;
-      // }
+      if(hasTexture){
+        delete[] tcoords[0];
+        delete[] tcoords[1];
+        delete[] tcoords[2];
+        delete[] tcoords[3];
+        delete[] tcoords;
+      }
     }
   }
   if(!isWireframe){
