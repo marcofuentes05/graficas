@@ -10,6 +10,7 @@
 #include "OBJ.hpp"
 #include "linearAlgebra.hpp"
 #include "Texture.hpp"
+// #include "Shader.hpp"
 using namespace std;
 /*----------------------------------------------------------------
 Idea de ***matrix obtenida de Stack Overflow:
@@ -25,6 +26,7 @@ class Render
   double minZ =  std::numeric_limits<double>::infinity();
   double maxZ =  -1*std::numeric_limits<double>::infinity();
   Texture texture;
+  // Shader shader(this);
 public:
   void glInit();
   void glCreateWindow(int width, int height);

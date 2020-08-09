@@ -62,6 +62,10 @@ int* Texture::getColor(double tx, double ty){
   return result;
 };
 
+string Texture::getPath(){
+  return path;
+}
+
 Texture::~Texture(){
   for (int i = 0 ; i < width ; i++){
     for (int j = 0 ; j < height ; j++){

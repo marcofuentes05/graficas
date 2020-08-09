@@ -9,8 +9,7 @@
 #include "Texture.hpp"
 using namespace std;
 
-int main()
-{
+int main(){
   // Implementacion
   Render r;
   r.glInit();
@@ -18,12 +17,6 @@ int main()
   r.glColor(1.0, 1.0, 1.0);
   r.glCreateWindow(1000, 1000);
   r.setTexture("models/model.bmp");
-
-  // r.glClear();
-  // r.glViewPort(1, 1 , 8, 8);
-  // r.glLine(0,0,1,1);
-  // r.glLine(0, 0, -1, -1);
-  // r.glLine(0, 0, -1, 1);
   // PARA LA CARA DE ADULTO
   int transform[3] = {500, 500, 0};
   int scale[3] = {400, 400, 400};
@@ -35,13 +28,9 @@ int main()
   // r.loadModel("models/toon_car.obj", transform, scale, false);
 
   //PARA LA COCA
-
   // int transform[3] = {250, 30, 0};
   // int scale[3] = {5, 5,5};
   // r.loadModel("models/coca.obj", transform, scale, false);
   
   r.glFinish("SR5.bmp");
-
-  // Texture t("testFile.bmp");
-  // t.read();
 }
