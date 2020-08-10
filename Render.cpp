@@ -6,6 +6,7 @@ Marco Fuentes - 18188
 Gráficas por computadora - Segundo Semestre 2020 - UVG
 ------------------------------------------------------------------- */
 #include "Render.hpp"
+#include "Texture.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -483,31 +484,46 @@ double *Render::baryCoords( double *v1 , double* v2 , double *v3 , double *punto
   return result;
 };
 
-void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[3] , double**texcoords , bool hasTexture , double intensity){
-  int _color[3];
+void Render::triangle_bc(double v1[3] , 
+    double v2[3] , 
+    double v3[3] , 
+    int color[3] , 
+    double**texcoords , 
+    bool hasTexture , 
+    double intensity,
+    double **normals,
+    string shader){
+  int *_color = new int[3];
   int minx = int(min(v1[0] , min(v2[0], v3[0])));
   int miny = int(min(v1[1], min(v2[1], v3[1])));
 
   int maxx = int(max(v1[0], max(v2[0], v3[0])));
   int maxy = int(max(v1[1], max(v2[1], v3[1])));
-  for (int i = minx; i <= maxx; i++){
-    for (int j = miny; j <= maxy; j++){
+  for (int i = minx; i <= maxx; i++){      for (int j = miny; j <= maxy; j++){
       double p[2] = {(double)i, (double)j};
       double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
         if (z > zbuffer[i][j] && intensity >=0){
-          _color[0] = int(double(color[0]) * intensity);
-          _color[1] = int(double(color[1]) * intensity);
-          _color[2] = int(double(color[2]) * intensity);
-          if(hasTexture){
-            double tx = texcoords[0][0] * bary[0] + texcoords[1][0] * bary[1] + texcoords[2][0]*bary[2];
-            double ty = texcoords[0][1] * bary[0] + texcoords[1][1] * bary[1] + texcoords[2][1]*bary[2];
-            int* texColor = texture.getColor(tx,ty);
-            _color[0] = _color[0] * (double(texColor[0]) / double(255));
-            _color[1] = _color[1] * (double(texColor[1]) / double(255));
-            _color[2] = _color[2] * (double(texColor[2]) / double(255));
-            delete [] texColor;
+          if (shader == "toonShader"){
+          _color = toonShader(bary , hasTexture , texcoords, normals , color );
+          }else if (shader == "gouradShader"){
+          _color = gouradShader(bary , hasTexture , texcoords, normals , color );
+          }else if (shader == "other"){
+
+          }else{
+            _color[0] = int(double(color[0]) * intensity);
+            _color[1] = int(double(color[1]) * intensity);
+            _color[2] = int(double(color[2]) * intensity);
+            if(hasTexture){
+              double tx = texcoords[0][0] * bary[0] + texcoords[1][0] * bary[1] + texcoords[2][0]*bary[2];
+              double ty = texcoords[0][1] * bary[0] + texcoords[1][1] * bary[1] + texcoords[2][1]*bary[2];
+              int* texColor = texture.getColor(tx,ty);
+              _color[0] = _color[0] * (double(texColor[0]) / double(255));
+              _color[1] = _color[1] * (double(texColor[1]) / double(255));
+              _color[2] = _color[2] * (double(texColor[2]) / double(255));
+              delete [] texColor;
+            }
           }
           glVertexAbs(j, i, _color );
         }
@@ -520,7 +536,7 @@ void Render::triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[
   }
 }
 
-void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWireframe , bool hasTexture){
+void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWireframe , bool hasTexture, string shader){
   OBJ obj(name);
   obj.read();
   int numFaces = obj.getNumFaces();
@@ -528,6 +544,7 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
   int *** faces = obj.getFaces();
   double** vertices = obj.getVertices();
   double ** texCoords = obj.getTexCoords();
+  double ** normals = obj.getNormals();
   double v0[3];
   double v1[2];
   for(int i = 0 ; i < numFaces ; i++){
@@ -571,7 +588,10 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       double v0[3];
       double v1[3];
       double v2[3];
-      double light[3] = {0,0, 10};
+      light[0] = 00 ; //x
+      light[1] = 0;  //y
+      light[2] = 100;//z
+
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
       v0[2] = vertices[ faces[i][0][0] - 1 ][2];
@@ -642,9 +662,28 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       double *normal = cross(d1, d2); // MUST DELETE[] THIS
       double *nnormal = normalize(normal , 3); // MUST DELETE[] THIS
       double *nlight = normalize(light, 3);    // MUST DELETE[] THIS
+      light[0] = nlight[0];
+      light[1] = nlight[1];
+      light[2] = nlight[2];
       double intensity = dot(nnormal , nlight , 3);
       
-      triangle_bc(v0,v1,v2, COLOR_VERTEX , tcoords , hasTexture , intensity );
+    // AQUI NORMALS
+      double ** thisNormals = new double*[3];
+      thisNormals[0] = new double[3];
+      thisNormals[0][0] = normals[faces[i][0][2] - 1][0];
+      thisNormals[0][1] = normals[faces[i][0][2] - 1][1];
+      thisNormals[0][2] = normals[faces[i][0][2] - 1][2];
+
+      thisNormals[1] = new double[3];
+      thisNormals[1][0] = normals[faces[i][1][2] - 1][0];
+      thisNormals[1][1] = normals[faces[i][1][2] - 1][1];
+      thisNormals[1][2] = normals[faces[i][1][2] - 1][2];
+
+      thisNormals[2] = new double[3];
+      thisNormals[2][0] = normals[faces[i][2][2] - 1][0];
+      thisNormals[2][1] = normals[faces[i][2][2] - 1][1];
+      thisNormals[2][2] = normals[faces[i][2][2] - 1][2];
+      triangle_bc(v0,v1,v2, COLOR_VERTEX , tcoords , hasTexture , intensity , thisNormals, shader);
       if (facesLen[i] > 3){
         double v3[3];
         v3[0] = vertices[faces[i][3][0] - 1][0];
@@ -660,7 +699,7 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
 
         tcoords[2][0] = vt3[0];
         tcoords[2][1] = vt3[1]; 
-        triangle_bc(v0, v2,v3, COLOR_VERTEX , tcoords , hasTexture , intensity) ;
+        triangle_bc(v0, v2,v3, COLOR_VERTEX , tcoords , hasTexture , intensity , thisNormals, shader) ;
       }
 
       delete[] d1;
@@ -678,15 +717,14 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
     }
   }
   if(!isWireframe){
-    glFinishZBuffer("zbuffer.bmp");
-  }; 
+    glFinishZBuffer("results/zbuffer.bmp");
+  };
 };
 
 void Render::setTexture(string t){
   texture.openFile(t);
   texture.read();
 };
-
 //DESTRUCTOR
 Render::~Render(){
   for (int i = 0; i < width; i++)
@@ -701,3 +739,138 @@ Render::~Render(){
   delete[] matrix;
   delete[] zbuffer;
 };
+
+string Render::getSom(){
+  return "WIDTH: "+to_string(width)+"\nHEIGHT: "+to_string(height)+"\nFROM SHADER";
+}
+
+int* Render::gouradShader(double baryCoords[3],
+      bool hasTexture,
+      double **texcoords,
+      double **normals,
+      int color[3]){
+  int b=color[0];
+  int g=color[1];
+  int r=color[2];
+  if(hasTexture){
+    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
+    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
+    int* texColor = texture.getColor(tx,ty);
+    b = b * (double(texColor[0]) / double(255));
+    g = g * (double(texColor[1]) / double(255));
+    r = r * (double(texColor[2]) / double(255));
+    delete [] texColor;
+  }
+  double normal[3];
+  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
+  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
+  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
+  double *nnormal = normalize(normal,3);
+  double intensity = dot(nnormal, light , 3);
+    b = b * intensity;
+    g = g * intensity;
+    r = r * intensity;
+  delete[] nnormal;
+  int *finalColor = new int[3];//{int(r), int(g), int(b)};
+  finalColor[2] = r;  
+  finalColor[1] = g;
+  finalColor[0] = b;  
+  if(intensity<=0){
+    finalColor[0] = 0;
+    finalColor[1] = 0;
+    finalColor[2] = 0;
+  }
+  return finalColor;
+}
+
+int* Render::toonShader(double baryCoords[3],
+      bool hasTexture,
+      double **texcoords,
+      double **normals,
+      int color[3]){
+  int b=color[0];
+  int g=color[1];
+  int r=color[2];
+  if(hasTexture){
+    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
+    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
+    int* texColor = texture.getColor(tx,ty);
+    b = b * (double(texColor[0]) / double(255));
+    g = g * (double(texColor[1]) / double(255));
+    r = r * (double(texColor[2]) / double(255));
+    delete [] texColor;
+  }
+  double normal[3];
+  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
+  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
+  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
+  double *nnormal = normalize(normal,3);
+  double intensity = dot(nnormal, light , 3);
+  if (intensity >=0 && intensity <0.2){
+    intensity = 0;
+  }else if(intensity >=0.2 && intensity < 0.4){
+    intensity = 0.2;
+  }else if(intensity >=0.4 && intensity < 0.6){
+    intensity = 0.4;
+  }else if(intensity >=0.6 && intensity < 0.8){
+    intensity = 0.6;
+  }else if(intensity >=0.8 && intensity < 1.0){
+    intensity = 0.8;
+  }else if(intensity = 1){
+    intensity = 1;
+  }else{
+    intensity = 0;
+  }
+    b = b * intensity;
+    g = g * intensity;
+    r = r * intensity;
+  delete[] nnormal;
+  int *finalColor = new int[3];//{int(r), int(g), int(b)};
+  finalColor[2] = r;  
+  finalColor[1] = g;
+  finalColor[0] = b;  
+  if(intensity<=0){
+    finalColor[0] = 0;
+    finalColor[1] = 0;
+    finalColor[2] = 0;
+  }
+  return finalColor;
+}
+
+void Render::PostProcessEffect(string pathFaces , string pathBackground){
+  Texture face;
+  face.openFile(pathFaces);
+  face.read();
+  Texture background;
+  background.openFile(pathBackground);
+  background.read();
+  glInit();
+  glClearColor(0.0, 0.0, 0.0);
+  glColor(1.0, 1.0, 1.0);
+  glCreateWindow(face.getWidth(), face.getHeight());
+  for (int i = 0; i < height; i++){
+    for (int j = 0; j < width; j++){
+      // Aqui tengo un pixel individual
+      double tx = double(j)/width;
+      double ty = double(i)/height;
+      int *faceColor = face.getColor(tx,ty);
+      if( faceColor[0] == COLOR_CLEAR[0] && 
+        faceColor[1] == COLOR_CLEAR[1] && 
+        faceColor[2] == COLOR_CLEAR[2] ){
+          int *backColor = background.getColor(tx, ty);
+          // cout << to_string(backColor[0]) << "\n" << to_string(backColor[1]) << "\n"  << to_string(backColor[2]) <<  endl;
+          // exit(1);
+          matrix[j][i][0] = backColor[0];
+          matrix[j][i][1] = backColor[1];
+          matrix[j][i][2] = backColor[2];
+          delete[] backColor;
+      }else{
+        matrix[j][i][0] = faceColor[0];
+        matrix[j][i][1] = faceColor[1];
+        matrix[j][i][2] = faceColor[2];
+      }
+      delete[] faceColor;      
+    }
+  }
+  glFinish("results/PostProcessFX.bmp");
+}

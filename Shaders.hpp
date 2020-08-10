@@ -1,13 +1,17 @@
 #ifndef SHADERS_H
 #define SHADERS_H
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include "Shaders.hpp"
 #include "Render.hpp"
 
 using namespace std;
-class Shaders{
-  Render render;
-  public:
-    Shaders();
-    Shaders(Render r);
-    void gourad(double baryCoords[3], double color[3]  );
-};
+int *gourad(Render *render,
+  double baryCoords[3], 
+  bool hasTexture, 
+  double **texCoords, 
+  int **normals, 
+  int color[3]);
 #endif

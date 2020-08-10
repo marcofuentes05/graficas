@@ -28,6 +28,8 @@ class OBJ{
     double** getVertices();
     int getNumVertices();
     double **getTexCoords();
+    double **getNormals();
+    int getNumNormals();
     ~OBJ();
 };
 

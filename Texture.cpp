@@ -44,8 +44,17 @@ void Texture::read(){
       }
     }
     file.close();
-    cout << "WIDTH: "<< width << endl;
-    cout << "HEIGHT: " <<height << endl;
+    for (int i = 0 ; i < height ; i++){
+      for (int j = 0 ; j < width ; j++){
+        for(int k = 0 ; k < 3 ; k++){
+          if (pixels[i][j][k] > 255){
+            pixels[i][j][k] = 255;
+          }else if(pixels[i][j][k] <0){
+            pixels[i][j][k] = 0;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -55,8 +64,8 @@ int* Texture::getColor(double tx, double ty){
   result[1] = 0;
   result[2] = 0;
   if (tx >= 0 && tx <=1 && ty >= 0 && ty <= 1){ 
-    int x = int(tx*(width));
-    int y = int(ty*(height));
+    int x = int(tx*(width-1));
+    int y = int(ty*(height-1));
     result[2] = pixels[y][x][2];//r
     result[1] = pixels[y][x][1];//g
     result[0] = pixels[y][x][0];//b
@@ -78,3 +87,11 @@ Texture::~Texture(){
   
   if(height > 0 && width > 0) {delete[] pixels;};
 };
+
+int Texture::getWidth(){
+  return width;
+}
+
+int Texture::getHeight(){
+  return height;
+}

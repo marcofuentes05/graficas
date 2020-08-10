@@ -10,12 +10,8 @@
 #include "OBJ.hpp"
 #include "linearAlgebra.hpp"
 #include "Texture.hpp"
-// #include "Shaders.hpp"
 using namespace std;
-/*----------------------------------------------------------------
-Idea de ***matrix obtenida de Stack Overflow:
-https://stackoverflow.com/questions/32675730/matrix-pointer-c
-----------------------------------------------------------------*/
+
 class Render
 {
   int width, height, x_view, y_view, view_width, view_height;
@@ -25,9 +21,10 @@ class Render
   int COLOR_VERTEX[3];
   double minZ =  std::numeric_limits<double>::infinity();
   double maxZ =  -1*std::numeric_limits<double>::infinity();
-  Texture texture;
-  // Shader shader;
 public:
+  Texture texture;
+  // Shaders shader;
+  double light[3]={0,0,0};
   void glInit();
   void glCreateWindow(int width, int height);
   void glViewPort(int x, int y, int width, int height);
@@ -41,20 +38,39 @@ public:
   void glLineAbsZBuffer(int x0, int y0, double z0 , int x1, int y1 , double z1);
   void glDrawSquare(double *ld, double *lu, double *rd, double *ru);
   void glDrawPolygon(int vertices[][2], int size);
-  void loadModel(string name, int transform[3], int scale[3] , bool isWireframe = true, bool hasTexture = false);
+  void loadModel(string name, int transform[3], int scale[3] , bool isWireframe = true, bool hasTexture = false, string shader = "gouradShader");
   void glFinish(string name);
   void glFinishZBuffer(string name);
   double *transform(double vector[3] , int transform[3] , int scale[3]);
   double *baryCoords(double *v1 , double* v2 , double *v3 , double *punto);
-  void triangle_bc(double v1[3] , double v2[3] , double v3[3] , int color[3] , double **texcoords, bool hasTexture = false, double intensity = 1);
+  void triangle_bc(double v1[3] , 
+    double v2[3] , 
+    double v3[3] ,
+     int color[3] , 
+     double **texcoords, 
+     bool hasTexture , 
+     double intensity , 
+     double**normals,
+     string shader);
   void setZBuffer(int x , int y , double value);
   string toString();
   string getMatrix();
+  string getSom();
   int GDCtoPixels(double x, bool isX);
   void setTexture(string t);
+  Texture getTexture();
   ~Render();
+  int * gouradShader(double baryCoords[3],
+      bool hasTexture,
+      double **texCoords,
+      double **normals,
+      int color[3]);
+  int * toonShader(double baryCoords[3],
+      bool hasTexture,
+      double **texCoords,
+      double **normals,
+      int color[3]);
+  void PostProcessEffect(string , string);
 };
 
-// void swap(int *a, int *b);
-// int abs(int m)
 #endif

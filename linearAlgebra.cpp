@@ -81,7 +81,11 @@ double* normalize(double*vector, int size){
   double norma = norm(vector, size);
   double *result = new double[size];
   for (int i = 0 ; i < size ; i ++){
+  // if (norma = 0 ){
+  //   return vector;
+  // }
     result[i] = vector[i]/norma;
+    
   }
   return result;
 };
