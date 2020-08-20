@@ -65,9 +65,44 @@ Esta entrega toma como base la entrega en SR4 y le agrega la funcionalidad de te
 
 Para ejecutarse, basta con ejecutar los comandos:
 ```
-g++ SR5.cpp Render.cpp OBJ.cpp linearALgebra.cpp Texture.cpp -o output //Para compilar
+g++ SR5.cpp Render.cpp OBJ.cpp linearAlgebra.cpp Texture.cpp -o output //Para compilar
 ./output //para ejecutar
 ```
 
 Finalmente, el resultado es:
 ![Esta imagen fue generada con SR4](./SR5Final.bmp "SR5")
+
+## Laboratorio 2: Shaders
+
+Esta entrega implementa varios shaders:
+- Gourad/Phong (mezcla hecha en clase)
+- Inverse shader (invierte la intensidad en cada punto)
+- PostProcess (agrega fondo virtual)
+- RandomChannel (Agrega estática al modelo)
+- ToonGold (Implementacion de toon shader, modificada para tonos de oro)
+- Toon Shader
+- Unlit (Ilumina todos los puntos de la misma manera)
+
+El programa genera un archivo BMP por cada shader, junto con el zbuffer. Para ejecutarlo, es necesario correr los siguientes comandos en la consola: 
+```
+~/ g++ LAB2.cpp Render.cpp Shaders.cpp OBJ.cpp linearAlgebra.cpp Texture.cpp -o output //Para compilar
+~/ ./ output // Para ejecutar
+Comenzando randomChannel Shader...
+randomChannel terminado!
+Comenzando gouradShader Shader...
+gouradShader terminado!
+Comenzando toonShader Shader...
+toonShader terminado!
+Comenzando unlit Shader...
+unlit terminado!
+Comenzando inverse Shader...
+inverse terminado!
+Comenzando toonGold Shader...
+toonGold terminado!
+Comenzando PostProcessEffect...
+PostProcessEffect terminado!
+El fin.
+```
+![Comandos](./Comandos.png "Comandos")
+Los archivos generados serán estos:
+![Resultados](./Resultados.png "Resultados")

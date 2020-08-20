@@ -70,7 +70,32 @@ public:
       double **texCoords,
       double **normals,
       int color[3]);
-  void PostProcessEffect(string , string);
+  int *randomShader(double baryCoords[3],
+      bool hasTexture,
+      double **texCoords,
+      double **normals,
+      int color[3]);
+  int *unlitShader(double baryCoords[3],
+      bool hasTexture,
+      double **texCoords,
+      double **normals,
+      int color[3]);
+  int *inverseShader(double baryCoords[3],
+      bool hasTexture,
+      double **texCoords,
+      double **normals,
+      int color[3]);
+  int *randomChannelShader(double baryCoords[3],
+      bool hasTexture,
+      double **texCoords,
+      double **normals,
+      int color[3]);
+    int * toonShaderGold(double baryCoords[3],
+      bool hasTexture,
+      double **texCoords,
+      double **normals,
+      int color[3]);
+  void PostProcessEffect(string, string);
 };
 
 #endif

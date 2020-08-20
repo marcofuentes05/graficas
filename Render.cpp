@@ -504,13 +504,21 @@ void Render::triangle_bc(double v1[3] ,
       double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
-        if (z > zbuffer[i][j] && intensity >=0){
+        if (z >= zbuffer[i][j] && intensity >=0){
           if (shader == "toonShader"){
           _color = toonShader(bary , hasTexture , texcoords, normals , color );
           }else if (shader == "gouradShader"){
           _color = gouradShader(bary , hasTexture , texcoords, normals , color );
-          }else if (shader == "other"){
-
+          }else if (shader == "random"){
+            _color = randomShader(bary , hasTexture , texcoords, normals , color );
+          }else if (shader == "unlit"){
+            _color = unlitShader(bary, hasTexture, texcoords, normals, color);
+          }else if(shader == "inverse"){
+            _color = inverseShader(bary, hasTexture, texcoords, normals, color);
+          }else if(shader == "randomChannel"){
+            _color = randomChannelShader(bary, hasTexture, texcoords, normals, color);
+          }else if (shader == "toonGold"){
+            _color = toonShaderGold(bary, hasTexture, texcoords, normals, color);
           }else{
             _color[0] = int(double(color[0]) * intensity);
             _color[1] = int(double(color[1]) * intensity);
@@ -584,7 +592,7 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
 
         glLineAbs(x0,y0,x1,y1);
       }
-    }else{
+    }//else{
       double v0[3];
       double v1[3];
       double v2[3];
@@ -714,7 +722,7 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
         delete[] tcoords[3];
         delete[] tcoords;
       }
-    }
+    // }
   }
   if(!isWireframe){
     glFinishZBuffer("results/zbuffer.bmp");
@@ -756,9 +764,9 @@ int* Render::gouradShader(double baryCoords[3],
     double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
     double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
     int* texColor = texture.getColor(tx,ty);
-    b = b * (double(texColor[0]) / double(255));
-    g = g * (double(texColor[1]) / double(255));
-    r = r * (double(texColor[2]) / double(255));
+    b = double(texColor[0]);//b * (double(texColor[0]) / double(255));
+    g = double(texColor[1]);//g * (double(texColor[1]) / double(255));
+    r = double(texColor[2]);//r * (double(texColor[2]) / double(255));
     delete [] texColor;
   }
   double normal[3];
@@ -837,7 +845,249 @@ int* Render::toonShader(double baryCoords[3],
   return finalColor;
 }
 
-void Render::PostProcessEffect(string pathFaces , string pathBackground){
+// Introduce estática al modelo
+int* Render::randomShader(
+  double baryCoords[3],
+  bool hasTexture,
+  double **texcoords,
+  double **normals,
+  int color[3]
+){
+  int b=color[0];
+  int g=color[1];
+  int r=color[2];
+  if(hasTexture){
+    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
+    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
+    int* texColor = texture.getColor(tx,ty);
+    b = b * (double(texColor[0]) / double(255));
+    g = g * (double(texColor[1]) / double(255));
+    r = r * (double(texColor[2]) / double(255));
+    delete [] texColor;
+  }
+  double normal[3];
+  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
+  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
+  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
+  double *nnormal = normalize(normal,3);
+  double intensity = dot(nnormal, light , 3);
+  int aleatorio = rand();
+  b = b + (aleatorio%(255 - b));
+  g = g + (aleatorio%(255 - g));
+  r = r + (aleatorio%(255 - r));
+  b = b * intensity;
+  g = g * intensity;
+  r = r * intensity;
+  delete[] nnormal;
+  int *finalColor = new int[3];//{int(r), int(g), int(b)};
+  finalColor[2] = r;  
+  finalColor[1] = g;
+  finalColor[0] = b;  
+  if(intensity<=0){
+    finalColor[0] = 0;
+    finalColor[1] = 0;
+    finalColor[2] = 0;
+  }
+  return finalColor;
+}
+
+int* Render::unlitShader(
+  double baryCoords[3],
+  bool hasTexture,
+  double **texcoords,
+  double **normals,
+  int color[3]
+){
+  int b=color[0];
+  int g=color[1];
+  int r=color[2];
+  if(hasTexture){
+    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
+    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
+    int* texColor = texture.getColor(tx,ty);
+    b = b * (double(texColor[0]) / double(255));
+    g = g * (double(texColor[1]) / double(255));
+    r = r * (double(texColor[2]) / double(255));
+    delete [] texColor;
+  }
+  double normal[3];
+  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
+  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
+  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
+  int *finalColor = new int[3];//{int(r), int(g), int(b)};
+  finalColor[2] = r;  
+  finalColor[1] = g;
+  finalColor[0] = b;  
+  return finalColor;
+}
+
+
+int* Render::inverseShader(
+  double baryCoords[3],
+  bool hasTexture,
+  double **texcoords,
+  double **normals,
+  int color[3]
+){
+  int b=color[0];
+  int g=color[1];
+  int r=color[2];
+  if(hasTexture){
+    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
+    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
+    int* texColor = texture.getColor(tx,ty);
+    b = b * (double(texColor[0]) / double(255));
+    g = g * (double(texColor[1]) / double(255));
+    r = r * (double(texColor[2]) / double(255));
+    delete [] texColor;
+  }
+  double normal[3];
+  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
+  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
+  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
+  double *nnormal = normalize(normal,3);
+  double intensity = dot(nnormal, light , 3);
+  intensity = 1 - intensity;
+  b = b * intensity;
+  g = g * intensity;
+  r = r * intensity;
+  delete[] nnormal;
+  int *finalColor = new int[3];//{int(r), int(g), int(b)};
+  finalColor[2] = r;  
+  finalColor[1] = g;
+  finalColor[0] = b;  
+  if(intensity<=0){
+    finalColor[0] = 0;
+    finalColor[1] = 0;
+    finalColor[2] = 0;
+  }
+  return finalColor;
+
+}
+
+int *Render::randomChannelShader(
+    double baryCoords[3],
+    bool hasTexture,
+    double **texcoords,
+    double **normals,
+    int color[3])
+{
+  int b = color[0];
+  int g = color[1];
+  int r = color[2];
+  if (hasTexture)
+  {
+    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0] * baryCoords[2];
+    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1] * baryCoords[2];
+    int *texColor = texture.getColor(tx, ty);
+    b = b * (double(texColor[0]) / double(255));
+    g = g * (double(texColor[1]) / double(255));
+    r = r * (double(texColor[2]) / double(255));
+    delete[] texColor;
+  }
+  double normal[3];
+  normal[0] = normals[0][0] * baryCoords[0] + normals[1][0] * baryCoords[1] + normals[2][0] * baryCoords[2];
+  normal[1] = normals[0][1] * baryCoords[0] + normals[1][1] * baryCoords[1] + normals[2][1] * baryCoords[2];
+  normal[2] = normals[0][2] * baryCoords[0] + normals[1][2] * baryCoords[1] + normals[2][2] * baryCoords[2];
+  double *nnormal = normalize(normal, 3);
+  double intensity = dot(nnormal, light, 3);
+  int aleatorio = rand();
+  int canal = rand()%3;
+  canal == 0 ? b = b + (aleatorio % (255 - b)) : (canal == 1 ? g = g + (aleatorio % (255 - g)) : r = r + (aleatorio % (255 - r)));
+  b = b * intensity;
+  g = g * intensity;
+  r = r * intensity;
+  delete[] nnormal;
+  int *finalColor = new int[3]; //{int(r), int(g), int(b)};
+  finalColor[2] = r;
+  finalColor[1] = g;
+  finalColor[0] = b;
+  if (intensity <= 0)
+  {
+    finalColor[0] = 0;
+    finalColor[1] = 0;
+    finalColor[2] = 0;
+  }
+  return finalColor;
+}
+
+int* Render::toonShaderGold(double baryCoords[3],
+      bool hasTexture,
+      double **texcoords,
+      double **normals,
+      int color[3]){
+  int b=color[0];
+  int g=color[1];
+  int r=color[2];
+  if(hasTexture){
+    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
+    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
+    int* texColor = texture.getColor(tx,ty);
+    b = b * (double(texColor[0]) / double(255));
+    g = g * (double(texColor[1]) / double(255));
+    r = r * (double(texColor[2]) / double(255));
+    delete [] texColor;
+  }
+  double normal[3];
+  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
+  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
+  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
+  double *nnormal = normalize(normal,3);
+  double intensity = dot(nnormal, light , 3);
+  double red = 1;
+  if (intensity >=0 && intensity <0.2){
+    intensity = 0;
+    r = 0;
+    g = 255 * intensity;
+    // b = 0;
+  }else if(intensity >=0.2 && intensity < 0.4){
+    intensity = 0.2;
+    r = 255 * intensity;
+    g = 255 * intensity;
+    // b = 0;
+  }else if(intensity >=0.4 && intensity < 0.6){
+    intensity = 0.4;
+    r = 255 * intensity;
+    g = 255 * intensity;
+    // b = 0;
+  }else if(intensity >=0.6 && intensity < 0.8){
+    intensity = 0.6;
+    r = 255 * intensity;
+    g = 255 * intensity;
+    // b = 0;
+  }else if(intensity >=0.8 && intensity < 1.0){
+    intensity = 0.8;
+    r = 255 * intensity;
+    g = 255 * intensity;
+    // b = 0;
+  }else if(intensity = 1){
+    intensity = 1;
+    r = 255;
+    g = 255;
+    // b = 0;
+  }else{
+    intensity = 0;
+  }
+    b = b * intensity;
+    g = g * intensity;
+    r = r * intensity;
+  delete[] nnormal;
+  int *finalColor = new int[3];//{int(r), int(g), int(b)};
+  finalColor[2] = r;  
+  finalColor[1] = g;
+  finalColor[0] = b;  
+  if(intensity<=0){
+    finalColor[0] = 0;
+    finalColor[1] = 0;
+    finalColor[2] = 0;
+  }
+  return finalColor;
+}
+
+// Este es técnicamente un shader
+void Render::PostProcessEffect(
+    string pathFaces , 
+    string pathBackground){
   Texture face;
   face.openFile(pathFaces);
   face.read();
@@ -858,8 +1108,6 @@ void Render::PostProcessEffect(string pathFaces , string pathBackground){
         faceColor[1] == COLOR_CLEAR[1] && 
         faceColor[2] == COLOR_CLEAR[2] ){
           int *backColor = background.getColor(tx, ty);
-          // cout << to_string(backColor[0]) << "\n" << to_string(backColor[1]) << "\n"  << to_string(backColor[2]) <<  endl;
-          // exit(1);
           matrix[j][i][0] = backColor[0];
           matrix[j][i][1] = backColor[1];
           matrix[j][i][2] = backColor[2];

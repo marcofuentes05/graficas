@@ -10,42 +10,71 @@
 using namespace std;
 
 int main()
-{
+{  
+  bool hasTexture = true;
+  string modelPath = "models/model.obj";
+
   // Implementacion
-  // Render r;
-  // r.glInit();
-  // r.glClearColor(0.0, 0.0, 0.0);
-  // r.glColor(1.0, 1.0, 1.0);
-  // r.glCreateWindow(1000, 1000);
-  // r.glClear();
+  Render r;
+  r.glInit();
+  r.glClearColor(0.0, 0.0, 0.0);
+  r.glColor(1.0, 1.0, 1.0);
+  r.glCreateWindow(1000, 1000);
+  r.glClear();
   // PARA EL PLANETA
   // r.setTexture("models/earthDay.bmp");
   // int transform[3] ={ 500, 500, 500 };
   // int scale[3] = {1, 1, 1};
-  // r.loadModel("models/earth.obj", transform, scale, false, true);
-  
-  // PARA EL MODELO
-  // string shader = "gouradShader";
-  // r.setTexture("models/model.bmp");
-  // int transform[3] = {500, 500,0};
-  // int scale[3] = {500, 500, 500};
-  // r.loadModel("models/model.obj", transform, scale, false, true, shader);
-  // r.glFinish("results/LAB2ModelGouradShader.bmp");
-  // shader = "gouradShader";
-  // r.loadModel("models/model.obj", transform, scale, false, true, "gouradShader");
-  // r.glFinish("results/LAB2ModelGouradShader.bmp");
 
   // PARA LA COCA
   // int transform[3] = {250, 30, 0};
-  // int scale[3] = {5, 5,5};
-  // r.loadModel("models/coca.obj", transform, scale, false, false, "gouradShader");
-  // r.glFinish("results/cocaGourad.bmp");
+  // int scale[3] = {2, 2,2};
 
 
-  Render r0;
-  r0.PostProcessEffect(
-    "results/LAB2ModelGouradShader.bmp" , 
-    "models/fondo.bmp"
-  );
+  // PARA EL MODELO
+  r.setTexture("models/model.bmp");
+  int transform[3] = {500, 500,0};
+  int scale[3] = {500, 500, 500};
+
+  string shader = "randomChannel";
+  cout << "Comenzando " << shader << " Shader..." << endl;
+  r.loadModel(modelPath, transform, scale, false, hasTexture, shader);
+  r.glFinish("results/"+shader+".bmp");
+  cout << shader << " terminado!" << endl;
+
+  shader = "gouradShader";
+  cout << "Comenzando " << shader << " Shader..." << endl;
+  r.loadModel(modelPath, transform, scale, false, hasTexture, shader);
+  r.glFinish("results/"+shader+".bmp");
+  cout << shader << " terminado!" << endl;
+
+  shader = "toonShader";
+  cout << "Comenzando " << shader << " Shader..." << endl;
+  r.loadModel(modelPath, transform, scale, false, hasTexture, shader);
+  r.glFinish("results/" + shader + ".bmp");
+  cout << shader << " terminado!" << endl;
+
+  shader = "unlit";
+  cout << "Comenzando " << shader << " Shader..." << endl;
+  r.loadModel(modelPath, transform, scale, false, hasTexture, shader);
+  r.glFinish("results/" + shader + ".bmp");
+  cout << shader << " terminado!" << endl;
+
+  shader = "inverse";
+  cout << "Comenzando " << shader << " Shader..." << endl;
+  r.loadModel(modelPath, transform, scale, false, hasTexture, shader);
+  r.glFinish("results/" + shader + ".bmp");
+  cout << shader << " terminado!" << endl;
+
+  shader = "toonGold";
+  cout << "Comenzando " << shader << " Shader..." << endl;
+  r.loadModel(modelPath, transform, scale, false, hasTexture, shader);
+  r.glFinish("results/" + shader + ".bmp");
+  cout << shader << " terminado!" << endl;
+
+  cout << "Comenzando PostProcessEffect..." << endl;
+  r.PostProcessEffect("results/gouradShader.bmp" , "models/fondo.bmp");
+  cout << "PostProcessEffect terminado!" << endl;
+
   cout << "El fin." << endl;
 }
