@@ -10,6 +10,7 @@
 #include "OBJ.hpp"
 #include "linearAlgebra.hpp"
 #include "Texture.hpp"
+#include "Matrix.hpp"
 using namespace std;
 
 class Render
@@ -38,20 +39,22 @@ public:
   void glLineAbsZBuffer(int x0, int y0, double z0 , int x1, int y1 , double z1);
   void glDrawSquare(double *ld, double *lu, double *rd, double *ru);
   void glDrawPolygon(int vertices[][2], int size);
-  void loadModel(string name, int transform[3], int scale[3] , bool isWireframe = true, bool hasTexture = false, string shader = "gouradShader");
+  void loadModel(string name, double transform[3], double scale[3] , double rotate[3] ,bool isWireframe = true, bool hasTexture = false, string shader = "gouradShader");
   void glFinish(string name);
   void glFinishZBuffer(string name);
-  double *transform(double vector[3] , int transform[3] , int scale[3]);
+  Matrix createModelMatrix(double translate[3]  , double scale[3] , double rotate[3] );
+  Matrix createRotationMatrix( double rotate[3]);
+  double *transform(double vector[3] , Matrix matriz);
   double *baryCoords(double *v1 , double* v2 , double *v3 , double *punto);
   void triangle_bc(double v1[3] , 
     double v2[3] , 
     double v3[3] ,
-     int color[3] , 
-     double **texcoords, 
-     bool hasTexture , 
-     double intensity , 
-     double**normals,
-     string shader);
+    int color[3] , 
+    double **texcoords, 
+    bool hasTexture , 
+    double intensity , 
+    double**normals,
+    string shader);
   void setZBuffer(int x , int y , double value);
   string toString();
   string getMatrix();

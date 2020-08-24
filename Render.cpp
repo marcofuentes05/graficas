@@ -13,7 +13,47 @@ Gráficas por computadora - Segundo Semestre 2020 - UVG
 #include <limits>
 #include <algorithm>
 #include <stdlib.h>
+#include <math.h>
 using namespace std;
+#define PI 3.14159265
+// Sobrecarga de operadores para matrices
+Matrix operator*(Matrix  &m0 , Matrix &m1){
+  Matrix result;
+  for (int i = 0; i < 4 ; i ++){
+    for (int j = 0 ; j < 4 ; j++){
+      double contador = 0 ;
+      for (int x  = 0 ; x < 4 ; x++){
+        contador = contador + (m1.getItem(x, j) * m0.getItem(i, x));
+      }
+      result.setValue(i,j,contador); 
+    }
+  }
+  return result;
+}
+
+double* operator*(Matrix &m, double* &v ){
+  double *result = new double[4];
+  for (int i = 0 ; i < 4 ; i ++){
+    double contador = 0 ;
+    for (int j = 0 ; j <4 ; j++){
+      contador = contador + m.getItem(i,j) * v[i];
+    }
+    result[i] = contador;
+  }
+  return result;
+}
+
+double* multiplyVM(Matrix m , double* v){
+  double *result = new double[4];
+  for (int i = 0 ; i < 4 ; i ++){
+    double contador = 0 ;
+    for (int j = 0 ; j <4 ; j++){
+      contador = contador + m.getItem(i,j) * v[j];
+    }
+    result[i] = contador;
+  }
+  return result;
+}
 
 //Helper functions.
 int abs(int m)
@@ -94,8 +134,7 @@ void Render::glCreateWindow(int width, int height)
     };
   };
 };
-void Render::glViewPort(int x, int y, int width, int height)
-{
+void Render::glViewPort(int x, int y, int width, int height){
   try
   {
     if ((x + width <= this->width) && (y + height <= this->height))
@@ -460,12 +499,83 @@ void Render::glFinishZBuffer(string name){
   archivo.close();
 };
 
-double * Render::transform(double vector[3] ,  int transform[3] , int scale[3]){ 
+double * Render::transform(double vector[3] , Matrix matriz){ 
+  double augVertex[4];
+  augVertex[0] = vector[0];
+  augVertex[1] = vector[1];
+  augVertex[2] = vector[2];
+  augVertex[3] = 1;
+
+  double *tranVertex = new double[4];
+  tranVertex = multiplyVM(matriz , augVertex);
   double *result = new double[3];
-  result[0] = (vector[0] * scale[0] + transform[0]);
-  result[1] = (vector[1] * scale[1] + transform[1]);
-  result[2] = (vector[2] * scale[2] + transform[2]);
+  // exit(1);
+  result[0] = tranVertex[0]/tranVertex[3];
+  result[1] = tranVertex[1]/tranVertex[3];
+  result[2] = tranVertex[2]/tranVertex[3];
+
+  delete tranVertex;
   return result;
+}
+
+Matrix Render::createModelMatrix(double translate[3]  , double scale[3] , double rotate[3]){
+  double translateMatrix[4][4] = {
+    {1, 0, 0 , translate[0]},
+    {0, 1, 0 , translate[1]},
+    {0, 0, 1 , translate[2]},
+    {0, 0, 0 , 1}
+  };
+  double scaleMatrix[4][4] = {
+    {scale[0] , 0 , 0 , 0},
+    {0 , scale[1] , 0 , 0},
+    {0 , 0 , scale[2] , 0},
+    {0 , 0 , 0 , 1}
+  };
+  Matrix translateM(translateMatrix);
+  Matrix scaleM(scaleMatrix);
+  Matrix rotationM = createRotationMatrix(rotate);
+
+  Matrix mul1 = (translateM * rotationM);
+  Matrix mul2 =  mul1 * scaleM;
+  return mul2;
+}
+
+double toRad(double deg){
+  return deg * PI / 180;
+}
+
+Matrix Render::createRotationMatrix(double rotate[3]){
+  double pitch = toRad(rotate[0]);
+  double yaw = toRad(rotate[1]);
+  double roll = toRad(rotate[2]);
+
+  double rotationX[4][4] = {
+    {1, 0, 0, 0},
+    {0, cos(pitch), -sin(pitch), 0},
+    {0, sin(pitch), cos(pitch), 0},
+    {0,0,0,1}
+  };
+  Matrix rx(rotationX);
+
+  double rotationY[4][4] = {
+    {cos(yaw), 0, sin(yaw), 0},
+    {0, 1, 0, 0},
+    {-sin(yaw), 0, cos(yaw), 0},
+    {0, 0, 0, 1}
+  };
+  Matrix ry(rotationY);
+
+  double rotationZ[4][4] = {
+    {cos(roll), -sin(roll), 0, 0},
+    {sin(roll), cos(roll), 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
+  };
+  Matrix rz(rotationZ);
+
+  Matrix m0 = rx * ry;
+  Matrix m1 = m0 * rz;
+  return m1;
 }
 
 double *Render::baryCoords( double *v1 , double* v2 , double *v3 , double *punto ){
@@ -499,16 +609,17 @@ void Render::triangle_bc(double v1[3] ,
 
   int maxx = int(max(v1[0], max(v2[0], v3[0])));
   int maxy = int(max(v1[1], max(v2[1], v3[1])));
-  for (int i = minx; i <= maxx; i++){      for (int j = miny; j <= maxy; j++){
+  for (int i = minx; i <= maxx; i++){      
+    for (int j = miny; j <= maxy; j++){
       double p[2] = {(double)i, (double)j};
       double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
         if (z >= zbuffer[i][j] && intensity >=0){
           if (shader == "toonShader"){
-          _color = toonShader(bary , hasTexture , texcoords, normals , color );
+            _color = toonShader(bary , hasTexture , texcoords, normals , color );
           }else if (shader == "gouradShader"){
-          _color = gouradShader(bary , hasTexture , texcoords, normals , color );
+            _color = gouradShader(bary , hasTexture , texcoords, normals , color );
           }else if (shader == "random"){
             _color = randomShader(bary , hasTexture , texcoords, normals , color );
           }else if (shader == "unlit"){
@@ -544,7 +655,7 @@ void Render::triangle_bc(double v1[3] ,
   }
 }
 
-void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWireframe , bool hasTexture, string shader){
+void Render::loadModel(string name , double transform[3] , double scale[3] , double rotate[3] , bool isWireframe , bool hasTexture, string shader){
   OBJ obj(name);
   obj.read();
   int numFaces = obj.getNumFaces();
@@ -553,6 +664,8 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
   double** vertices = obj.getVertices();
   double ** texCoords = obj.getTexCoords();
   double ** normals = obj.getNormals();
+  Matrix modelMatrix = createModelMatrix(transform, scale, rotate);
+  Matrix rotationMatrix = createRotationMatrix(rotate);
   double v0[3];
   double v1[2];
   for(int i = 0 ; i < numFaces ; i++){
@@ -571,59 +684,43 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       }
     }
   }
-  for (int i = 0 ; i < numFaces ; i++){ 
-    if (isWireframe) {
-      for (int j = 0 ; j < facesLen[i] ; j++){
-        v0[0] = vertices[ faces[i][ j ][ 0 ] - 1 ][0];
-        v0[1] = vertices[ faces[i][ j ][ 0 ] - 1 ][1];
-
-        v1[0] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][0];
-        v1[1] = vertices[ faces[i][ (j + 1) % facesLen[i] ][0] - 1 ][1];
-
-        int x0 = int(v0[0]*scale[0] + transform[0]) % width ;
-        int y0 = int(v0[1]*scale[1] + transform[1]) % height ;
-        int x1 = int(v1[0] * scale[0] + transform[0]) % width ;
-        int y1 = int(v1[1] * scale[1] + transform[1]) % height ;
-
-        x0 = x0<0 ? x0*(-1) : x0;
-        y0 = y0<0 ? y0*(-1) : y0;
-        x1 = x1<0 ? x1*(-1) : x1;
-        y1 = y1<0 ? y1*(-1) : y1; 
-
-        glLineAbs(x0,y0,x1,y1);
-      }
-    }//else{
+  for (int i = 0 ; i < numFaces ; i++){
       double v0[3];
       double v1[3];
       double v2[3];
       light[0] = 00 ; //x
       light[1] = 0;  //y
       light[2] = 100;//z
-
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
       v0[2] = vertices[ faces[i][0][0] - 1 ][2];
+      
+      double *v0T = this->transform(v0 , modelMatrix);
+      v0[0] =  v0T[0];//(v0[0]*scale[0] +transform[0]);
+      v0[1] =  v0T[1];//(v0[1]*scale[1] +transform[1]);
+      v0[2] =  v0T[2];//(v0[2]*scale[2] +transform[2]);
+      delete v0T;
 
       v1[0] = vertices[ faces[i][1][0] - 1][0];
       v1[1] = vertices[ faces[i][1][0] - 1][1];
       v1[2] = vertices[ faces[i][1][0] - 1][2];
+      
+      double *v1T = this->transform(v1, modelMatrix);
+      v1[0] = v1T[0];// (v1[0]*scale[0] +transform[0]);
+      v1[1] = v1T[1];// (v1[1]*scale[1] +transform[1]);
+      v1[2] = v1T[2];// (v1[2]*scale[2] +transform[2]);
+      delete v1T;
 
       v2[0] = vertices[ faces[i][2][0] - 1][0];
       v2[1] = vertices[ faces[i][2][0] - 1][1];
       v2[2] = vertices[ faces[i][2][0] - 1][2];
 
-      v0[0] =  (v0[0]*scale[0] +transform[0]);
-      v0[1] =  (v0[1]*scale[1] +transform[1]);
-      v0[2] =  (v0[2]*scale[2] +transform[2]);
-      
-      v1[0] =  (v1[0]*scale[0] +transform[0]);
-      v1[1] =  (v1[1]*scale[1] +transform[1]);
-      v1[2] =  (v1[2]*scale[2] +transform[2]);
-      
-      v2[0] =  (v2[0]*scale[0] +transform[0]);
-      v2[1] =  (v2[1]*scale[1] +transform[1]);
-      v2[2] =  (v2[2]*scale[2] +transform[2]);
-     
+      double *v2T = this->transform(v2, modelMatrix);
+      v2[0] = v2T[0];// (v2[0]*scale[0] +transform[0]);
+      v2[1] = v2T[1];// (v2[1]*scale[1] +transform[1]);
+      v2[2] = v2T[2];// (v2[2]*scale[2] +transform[2]);
+      delete v2T;
+
       double vt0[2];
       double vt1[2];
       double vt2[2];
@@ -681,32 +778,47 @@ void Render::loadModel(string name , int transform[3] , int scale[3] , bool isWi
       thisNormals[0][0] = normals[faces[i][0][2] - 1][0];
       thisNormals[0][1] = normals[faces[i][0][2] - 1][1];
       thisNormals[0][2] = normals[faces[i][0][2] - 1][2];
+      double * transNormals0 = this->transform(thisNormals[0] , rotationMatrix);
+      thisNormals[0][0] = transNormals0[0];
+      thisNormals[0][1] = transNormals0[1];
+      thisNormals[0][2] = transNormals0[2];
+      delete transNormals0;
 
       thisNormals[1] = new double[3];
       thisNormals[1][0] = normals[faces[i][1][2] - 1][0];
       thisNormals[1][1] = normals[faces[i][1][2] - 1][1];
       thisNormals[1][2] = normals[faces[i][1][2] - 1][2];
+      double* transNormals1 = this->transform(thisNormals[1], rotationMatrix);
+      thisNormals[1][0] = transNormals1[0];
+      thisNormals[1][1] = transNormals1[1];
+      thisNormals[1][2] = transNormals1[2];
+      delete transNormals1;
 
       thisNormals[2] = new double[3];
       thisNormals[2][0] = normals[faces[i][2][2] - 1][0];
       thisNormals[2][1] = normals[faces[i][2][2] - 1][1];
       thisNormals[2][2] = normals[faces[i][2][2] - 1][2];
+      double* transNormals2 = this->transform(thisNormals[2], rotationMatrix);
+      thisNormals[2][0] = transNormals2[0];
+      thisNormals[2][1] = transNormals2[1];
+      thisNormals[2][2] = transNormals2[2];
+      delete transNormals2;
       triangle_bc(v0,v1,v2, COLOR_VERTEX , tcoords , hasTexture , intensity , thisNormals, shader);
       if (facesLen[i] > 3){
-        double v3[3];
+        double *v3 = new double[3];
         v3[0] = vertices[faces[i][3][0] - 1][0];
         v3[1] = vertices[faces[i][3][0] - 1][1];
         v3[2] = vertices[faces[i][3][0] - 1][2];
-        
-        v3[0] =  (v3[0]*scale[0] +transform[0]);
-        v3[1] =  (v3[1]*scale[1] +transform[1]);
-        v3[2] =  (v3[2]*scale[2] +transform[2]);
-
+        double *v3T = this->transform(v3 , modelMatrix);
+        v3[0] = v3T[0];
+        v3[1] = v3T[1];
+        v3[2] = v3T[2];
+        delete v3T;
         tcoords[1][0] = tcoords[2][0];
         tcoords[1][1] = tcoords[2][1];
 
         tcoords[2][0] = vt3[0];
-        tcoords[2][1] = vt3[1]; 
+        tcoords[2][1] = vt3[1];
         triangle_bc(v0, v2,v3, COLOR_VERTEX , tcoords , hasTexture , intensity , thisNormals, shader) ;
       }
 
