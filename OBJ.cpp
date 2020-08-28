@@ -133,7 +133,6 @@ void OBJ::read(){
             int facesContador = 0;
             vector<string> coords = explode( item , '/' );
             for(auto coord : coords){
-              int i = 5;
               string str = coord;
               try{
                 int value = stoi(str);

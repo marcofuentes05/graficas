@@ -15,4 +15,5 @@ class Matrix{
     double getItem(int i , int j);
     void setValue(int i , int j , double value);
     void toString();
+    double** getMatrix();
 };

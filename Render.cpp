@@ -78,8 +78,7 @@ void Render::glInit()
   glClearColor(0.0, 0.0, 0.0);
   glColor(0.0, 0.0, 0.0);
 };
-void Render::glCreateWindow(int width, int height)
-{
+void Render::glCreateWindow(int width, int height){
   // Limpiar memoria en caso exista anteriormente
   int w = this->width;
   int h = this->height;
@@ -95,41 +94,30 @@ void Render::glCreateWindow(int width, int height)
     delete[] zbuffer;
   }
 
-
-
   // BMP solo acepta dimensiones multiplos de 4
   int modw = width % 4;
   int modh = width % 4;
-  if (modw == 0)
-  {
+  if (modw == 0){
     this->width = width;
     this->view_width = width;
-  }
-  else
-  {
+  }else{
     this->width = width + (4 - modw);
     this->view_width = width + (4 - modw);
   }
-  if (modh == 0)
-  {
+  if (modh == 0){
     this->height = height;
     this->view_height = height;
-  }
-  else
-  {
+  }else{
     this->height = height + (4 - modh);
     this->view_height = height + (4 - modh);
   }
-
   //Crear nueva matriz dinamica
   matrix = new int **[this->width];
   zbuffer = new double*[this->width];
-  for (int i = 0; i < this->width; i++)
-  {
+  for (int i = 0; i < this->width; i++){
     matrix[i] = new int *[this->height];
     zbuffer[i] = new double [this->height];
-    for (int j = 0; j < this->height; j++)
-    {
+    for (int j = 0; j < this->height; j++){
       matrix[i][j] = new int[3];
     };
   };
@@ -192,14 +180,11 @@ string Render::getMatrix()
   };
   return r;
 }
-void Render::glClear()
-{
-  for (int i = 0; i < height; i++)
-  {
+void Render::glClear(){
+  for (int i = 0; i < height; i++){
     for (int j = 0; j < width; j++){
-      zbuffer[i][j] = -1 * std::numeric_limits<double>::infinity();
-      for (int k = 0; k < 3; k++)
-      {
+      zbuffer[j][i] = -1 * std::numeric_limits<double>::infinity();
+      for (int k = 0; k < 3; k++){
         matrix[j][i][k] = COLOR_CLEAR[k];
       };
     };
@@ -444,6 +429,7 @@ void Render::glFinish(string name){
     }
   }
   archivo.close();
+  glFinishZBuffer("results/zbuffer.bmp");
 };
 void Render::glFinishZBuffer(string name){
   // Crear archivo
@@ -482,8 +468,8 @@ void Render::glFinishZBuffer(string name){
   //Color pallete (NONE)
 
   //Raw pixel data
-  for (int i = 0; i < height; i++){
-    for (int j = 0; j < width; j++){
+  for (int i = 0; i < this->height; i++){
+    for (int j = 0; j < this->width; j++){
       for (int k = 0 ; k < 3 ; k ++){
         int valor = 0;
         if (zbuffer[j][i] <= maxZ && zbuffer[j][i] >= minZ){
@@ -500,22 +486,30 @@ void Render::glFinishZBuffer(string name){
 };
 
 double * Render::transform(double vector[3] , Matrix matriz){ 
-  double augVertex[4];
-  augVertex[0] = vector[0];
-  augVertex[1] = vector[1];
-  augVertex[2] = vector[2];
-  augVertex[3] = 1;
-
-  double *tranVertex = new double[4];
-  tranVertex = multiplyVM(matriz , augVertex);
+  double augVertex[4] = {vector[0] , vector[1] , vector[2] , 1};
+  double *tranVertex = multiplyVM(matriz , augVertex);
   double *result = new double[3];
-  // exit(1);
   result[0] = tranVertex[0]/tranVertex[3];
   result[1] = tranVertex[1]/tranVertex[3];
   result[2] = tranVertex[2]/tranVertex[3];
 
   delete tranVertex;
   return result;
+}
+
+double* Render::dirTransform(double vector[3] , Matrix vMatrix){
+  double augVertex[4] = {vector[0] , vector[1] , vector[2] , 0};
+  double *transVertex = multiplyVM(vMatrix , augVertex); //DELETE THIS
+  return transVertex;
+}
+
+void Render::createViewMatrix(double camPosition[3] , double camRotation[3]){
+  double scale[3] = {1,1,1};
+  camMatrix = createModelMatrix(camPosition , scale, camRotation);
+  double**cMatrix = camMatrix.getMatrix();
+  double **inverted = inversa(cMatrix);
+  camMatrix = Matrix(inverted);
+  // TODO REVISAR USO DE MEMORIA
 }
 
 Matrix Render::createModelMatrix(double translate[3]  , double scale[3] , double rotate[3]){
@@ -615,39 +609,41 @@ void Render::triangle_bc(double v1[3] ,
       double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
-        if (z >= zbuffer[i][j] && intensity >=0){
-          if (shader == "toonShader"){
-            _color = toonShader(bary , hasTexture , texcoords, normals , color );
-          }else if (shader == "gouradShader"){
-            _color = gouradShader(bary , hasTexture , texcoords, normals , color );
-          }else if (shader == "random"){
-            _color = randomShader(bary , hasTexture , texcoords, normals , color );
-          }else if (shader == "unlit"){
-            _color = unlitShader(bary, hasTexture, texcoords, normals, color);
-          }else if(shader == "inverse"){
-            _color = inverseShader(bary, hasTexture, texcoords, normals, color);
-          }else if(shader == "randomChannel"){
-            _color = randomChannelShader(bary, hasTexture, texcoords, normals, color);
-          }else if (shader == "toonGold"){
-            _color = toonShaderGold(bary, hasTexture, texcoords, normals, color);
-          }else{
-            _color[0] = int(double(color[0]) * intensity);
-            _color[1] = int(double(color[1]) * intensity);
-            _color[2] = int(double(color[2]) * intensity);
-            if(hasTexture){
-              double tx = texcoords[0][0] * bary[0] + texcoords[1][0] * bary[1] + texcoords[2][0]*bary[2];
-              double ty = texcoords[0][1] * bary[0] + texcoords[1][1] * bary[1] + texcoords[2][1]*bary[2];
-              int* texColor = texture.getColor(tx,ty);
-              _color[0] = _color[0] * (double(texColor[0]) / double(255));
-              _color[1] = _color[1] * (double(texColor[1]) / double(255));
-              _color[2] = _color[2] * (double(texColor[2]) / double(255));
-              delete [] texColor;
+        if (i < width && j < height && i>=0 && j >=0){
+          if (z >= zbuffer[i][j] && intensity >=0){
+            if (shader == "toonShader"){
+              _color = toonShader(bary , hasTexture , texcoords, normals , color );
+            }else if (shader == "gouradShader"){
+              _color = gouradShader(bary , hasTexture , texcoords, normals , color );
+            }else if (shader == "random"){
+              _color = randomShader(bary , hasTexture , texcoords, normals , color );
+            }else if (shader == "unlit"){
+              _color = unlitShader(bary, hasTexture, texcoords, normals, color);
+            }else if(shader == "inverse"){
+              _color = inverseShader(bary, hasTexture, texcoords, normals, color);
+            }else if(shader == "randomChannel"){
+              _color = randomChannelShader(bary, hasTexture, texcoords, normals, color);
+            }else if (shader == "toonGold"){
+              _color = toonShaderGold(bary, hasTexture, texcoords, normals, color);
+            }else{
+              _color[0] = int(double(color[0]) * intensity);
+              _color[1] = int(double(color[1]) * intensity);
+              _color[2] = int(double(color[2]) * intensity);
+              if(hasTexture){
+                double tx = texcoords[0][0] * bary[0] + texcoords[1][0] * bary[1] + texcoords[2][0]*bary[2];
+                double ty = texcoords[0][1] * bary[0] + texcoords[1][1] * bary[1] + texcoords[2][1]*bary[2];
+                int* texColor = texture.getColor(tx,ty);
+                _color[0] = _color[0] * (double(texColor[0]) / double(255));
+                _color[1] = _color[1] * (double(texColor[1]) / double(255));
+                _color[2] = _color[2] * (double(texColor[2]) / double(255));
+                delete [] texColor;
+              }
             }
+            glVertexAbs(j, i, _color );
           }
-          glVertexAbs(j, i, _color );
-        }
-        if (z > zbuffer[i][j]){
-          zbuffer[i][j] = z;
+          if (z > zbuffer[i][j]){
+            zbuffer[i][j] = z;
+          }
         }
       }
       delete[] bary;
@@ -689,7 +685,7 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       double v1[3];
       double v2[3];
       light[0] = 00 ; //x
-      light[1] = 0;  //y
+      light[1] = 00;  //y
       light[2] = 100;//z
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
@@ -836,9 +832,9 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       }
     // }
   }
-  if(!isWireframe){
-    glFinishZBuffer("results/zbuffer.bmp");
-  };
+  // if(!isWireframe){
+  //   glFinishZBuffer("results/zbuffer.bmp");
+  // };
 };
 
 void Render::setTexture(string t){
@@ -847,17 +843,15 @@ void Render::setTexture(string t){
 };
 //DESTRUCTOR
 Render::~Render(){
-  for (int i = 0; i < width; i++)
-  {
-    for (int j = 0; j < height; j++)
-    {
+  for (int i = 0; i < width; i++){
+    for (int j = 0; j < height; j++){
       delete[] matrix[i][j];
     }
     delete[] matrix[i];
-    delete[] zbuffer[i];
+    // delete[] zbuffer[i];
   }
   delete[] matrix;
-  delete[] zbuffer;
+  // delete[] zbuffer;
 };
 
 string Render::getSom(){

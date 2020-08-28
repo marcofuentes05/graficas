@@ -57,3 +57,14 @@ void Matrix::toString(){
     cout << endl;
   }
 }
+
+double** Matrix::getMatrix(){
+  double **mat = new double[4];
+  for (int i = 0 ; i < 4 ; i++){
+    mat[i] = new double[4];
+    for (int j = 0 ; j <4 ; j++){
+      mat[i][j] = matriz[i][j];
+    }
+  }
+  return mat;
+}

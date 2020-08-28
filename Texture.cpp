@@ -55,6 +55,10 @@ void Texture::read(){
         }
       }
     }
+  }else{
+    cout << "Imposible encontrar archivo: " << path << endl;
+    cout << "Aniquilando ejecución" << endl;
+    exit(1);
   }
 }
 

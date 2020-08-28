@@ -22,6 +22,7 @@ class Render
   int COLOR_VERTEX[3];
   double minZ =  std::numeric_limits<double>::infinity();
   double maxZ =  -1*std::numeric_limits<double>::infinity();
+  Matrix camMatrix;
 public:
   Texture texture;
   // Shaders shader;
@@ -42,9 +43,11 @@ public:
   void loadModel(string name, double transform[3], double scale[3] , double rotate[3] ,bool isWireframe = true, bool hasTexture = false, string shader = "gouradShader");
   void glFinish(string name);
   void glFinishZBuffer(string name);
+  void createViewMatrix(double camPosition[3] , double camRotation[3]);
   Matrix createModelMatrix(double translate[3]  , double scale[3] , double rotate[3] );
   Matrix createRotationMatrix( double rotate[3]);
   double *transform(double vector[3] , Matrix matriz);
+  double *dirTransform(double vector[3] , Matrix vMatrix);
   double *baryCoords(double *v1 , double* v2 , double *v3 , double *punto);
   void triangle_bc(double v1[3] , 
     double v2[3] , 

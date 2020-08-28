@@ -13,4 +13,9 @@ double norm(int* vector, int size);
 double *substract(double* v1 , double*v2, int size);
 int *substract(int *v1, int *v2, int size);
 double* normalize(double* vector, int size);
+double det(double matriz[4][4] );
+double det3(double matriz[3][3]);
+double** transpuesta(double **matriz);
+double **cof(double matriz[4][4]);
+double **inversa(double **matriz);
 #endif
