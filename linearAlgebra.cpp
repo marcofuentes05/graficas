@@ -166,26 +166,16 @@ double **cof(double matriz[4][4]){
   return result; //DELETE THIS
 }
 
-double **inversa(double **matriz){
+double **inversa(double matriz[4][4]){
   double **result = new double*[4];
   double determinante = det(matriz);
   double ** cofactores = cof(matriz); //DELETE THIS
   double** adjunta = transpuesta(cofactores); //DELETE 
-  cout << "Cofactores: " << endl;
   for (int i  = 0; i < 4 ; i++){
+    result [i] = new double[4];
     for (int j = 0 ; j < 4 ; j ++){
-      cout << cofactores[i][j] << "\t";
-    }
-    cout << endl;
-  }
-  cout << to_string(determinante) << endl;
-  for (int i = 0 ; i < 4 ; i++){
-    result[i] = new double[4];
-    for (int j = 0 ; j <4 ; j++){
       result[i][j] = adjunta[i][j] / determinante;
-      cout << adjunta[i][j] << "\t";
     }
-    cout << endl;
   }
   //delete round
   for (int i = 0 ; i<4;i++){

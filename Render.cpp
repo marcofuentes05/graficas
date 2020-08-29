@@ -256,15 +256,11 @@ void Render::glLine(double x0, double y0, double x1, double y1)
     offset = offset + m;
     if (offset > limit)
     {
-      if (y_0 < y_1)
-      {
+      if (y_0 < y_1){
         y = y + 1;
-      }
-      else
-      {
+      }else{
         y = y - 1;
       }
-
       limit = limit + 1;
     }
   }
@@ -507,7 +503,13 @@ void Render::createViewMatrix(double camPosition[3] , double camRotation[3]){
   double scale[3] = {1,1,1};
   camMatrix = createModelMatrix(camPosition , scale, camRotation);
   double**cMatrix = camMatrix.getMatrix();
-  double **inverted = inversa(cMatrix);
+  double cMatrixA[4][4] = {
+    {cMatrix[0][0] , cMatrix[0][1] , cMatrix[0][2] , cMatrix[0][3]},
+    {cMatrix[1][0] , cMatrix[1][1] , cMatrix[1][2] , cMatrix[1][3]},
+    {cMatrix[2][0] , cMatrix[2][1] , cMatrix[2][2] , cMatrix[2][3]},
+    {cMatrix[3][0] , cMatrix[3][1] , cMatrix[3][2] , cMatrix[3][3]}
+  };
+  double **inverted = inversa(cMatrixA);
   camMatrix = Matrix(inverted);
   // TODO REVISAR USO DE MEMORIA
 }

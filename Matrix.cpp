@@ -59,7 +59,7 @@ void Matrix::toString(){
 }
 
 double** Matrix::getMatrix(){
-  double **mat = new double[4];
+  double **mat = new double*[4];
   for (int i = 0 ; i < 4 ; i++){
     mat[i] = new double[4];
     for (int j = 0 ; j <4 ; j++){

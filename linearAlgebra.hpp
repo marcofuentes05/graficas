@@ -17,5 +17,5 @@ double det(double matriz[4][4] );
 double det3(double matriz[3][3]);
 double** transpuesta(double **matriz);
 double **cof(double matriz[4][4]);
-double **inversa(double **matriz);
+double **inversa(double matriz[4][4]);
 #endif
