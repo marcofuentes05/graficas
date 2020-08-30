@@ -27,10 +27,14 @@ int dot(int *v1, int *v2, int size){
 
 double *cross(double *v1, double *v2){
   // Temporal, pensado únicamente cuando size = 3
+  // cout << "EN CROSS:" << endl;
   double *result = new double[3];
   result[0] = v1[1]*v2[2] - v1[2]*v2[1] ;
+  // cout << v2[0] << endl;
   result[1] = v1[2]*v2[0] - v1[0]*v2[2] ;
+  // cout << v2[1] << endl;
   result[2] = v1[0]*v2[1] - v1[1]*v2[0] ;
+  // cout << v2[2] << endl;
   return result;
   // IMPORTANTE llamar delete[] result en MAIN para prevenir memory leaks
 };

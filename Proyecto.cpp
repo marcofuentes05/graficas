@@ -24,43 +24,19 @@ Matrix multi(Matrix  &m0 , Matrix &m1){
 }
 
 int main(){  
-  bool hasTexture = false;
-  string modelPath = "models/helmet.obj";
-
-
-  double matriz[4][4] = {
-    {1,1,0,0},
-    {0,-1,-2,0},
-    {0,0,1,-1},
-    {0,0,0,1}
-  };
-  cout << "Determinante: " << det(matriz) << endl;
-  Matrix m0(matriz);
-  cout << "Matriz 1:" << endl;
-  m0.toString();
-  double **matrizI = inversa(matriz);
-  double matrizInversa[4][4] = {
-    {matrizI[0][0] , matrizI[0][1] , matrizI[0][2] , matrizI[0][3]},
-    {matrizI[1][0] , matrizI[1][1] , matrizI[1][2] , matrizI[1][3]},
-    {matrizI[2][0] , matrizI[2][1] , matrizI[2][2] , matrizI[2][3]},
-    {matrizI[3][0] , matrizI[3][1] , matrizI[3][2] , matrizI[3][3]}
-  };
-  cout << "Matriz 2:" << endl;
-  Matrix m1(matrizInversa);
-  m1.toString();
-  Matrix m2 = multi(m0,m1);
-
-  cout << "Resultado de multiplicacion: " << endl;
-  m2.toString();
-
   // Implementacion
-  // string shader = "gouradShader";
-  // Render r;
-  // r.glInit();
-  // r.glClearColor(0.0, 0.0, 0.0);
-  // r.glColor(1.0, 1.0, 1.0);
-  // r.glCreateWindow(2000, 2004);
-  // r.glClear();
+  string modelPath="models/helmet.obj";
+  string shader = "";
+  Render r;
+  r.glInit();
+  r.glClearColor(0.0, 0.0, 0.0);
+  r.glColor(1.0, 1.0, 1.0);
+  r.glCreateWindow(768, 432);
+  r.glClear();
+  r.createProjectionMatrix();
+  // double vector[3] = {0,0,0};
+  // double vector1[3] = {500, 500, 1000};
+  // r.createViewMatrix(vector1, vector);
   
   // cout << "Comenzando renderizado..." << endl;
   // double transform[3] = {500, 650,1};
@@ -74,12 +50,37 @@ int main(){
   // modelPath = "models/earth.obj";
   // r.setTexture("models/textures/moon.bmp");
   //   cout << "Comenzando renderizado..." << endl;
-  // double transform0[3] ={ 1500, 500, 500 };
+  // double transform0[3] ={ 1500, 500, 0 };
   // double scale0[3] = {1, 1, 1};
   // double rotate0[3] = {0, 30, 0};
+  // double camPosition[3] = {2,2,0};
+  // // r.lookAt(transform0 , camPosition);
   // r.loadModel(modelPath, transform0, scale0, rotate0, false, true, shader);
-  //   cout << "renderizado terminado!" << endl;
+  // cout << "renderizado terminado!" << endl;
 
+  // // PARA EL MODELO
+  modelPath = "models/model.obj";
+  r.setTexture("models/textures/model.bmp");
+    cout << "Comenzando renderizado..." << endl;
+  double transform0[3] ={ 1, 0, -5 };
+  double scale0[3] = {1, 1, 1};
+  double rotate0[3] = {0, 0, 0};
+  double camPosition[3] = {0,0,1};
+  r.lookAt(transform0 , camPosition);
+  r.loadModel(modelPath, transform0, scale0, rotate0, false, true, shader);
+  cout << "renderizado terminado!" << endl;
+
+  cout << "Comenzando renderizado..." << endl;
+  double transform1[3] = {-1, 0, -5};
+  // double scale0[3] = {1, 1, 1};
+  // double rotate0[3] = {0, 0, 0};
+  // double camPosition[3] = {0, 0, 0};
+  // r.lookAt(transform0, camPosition);
+  r.loadModel(modelPath, transform1, scale0, rotate0, false, true, shader);
+  cout << "renderizado terminado!" << endl;
+
+  double transform2[3] = {-1, 0, -2};
+  r.loadModel(modelPath, transform2, scale0, rotate0, false, true, shader);
   // // PARA LA COCA
   // modelPath = "models/coca.obj";
   // r.setTexture("models/textures/earthDay.bmp");
@@ -90,5 +91,5 @@ int main(){
 
   // // shader = "gouradShader";
   // // r.loadModel(modelPath, transform, scale, rotate, false, hasTexture, shader);
-  // r.glFinish("results/test.bmp");
+  r.glFinish("results/tst.bmp");
 }

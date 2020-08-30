@@ -23,6 +23,8 @@ class Render
   double minZ =  std::numeric_limits<double>::infinity();
   double maxZ =  -1*std::numeric_limits<double>::infinity();
   Matrix camMatrix;
+  Matrix viewPortMatrix;
+  Matrix projectionMatrix;
 public:
   Texture texture;
   // Shaders shader;
@@ -43,7 +45,9 @@ public:
   void loadModel(string name, double transform[3], double scale[3] , double rotate[3] ,bool isWireframe = true, bool hasTexture = false, string shader = "gouradShader");
   void glFinish(string name);
   void glFinishZBuffer(string name);
+  void lookAt(double eye[3] , double camPosition[3]);
   void createViewMatrix(double camPosition[3] , double camRotation[3]);
+  void createProjectionMatrix(double n = 0.1, double f=1000 , double fov =60);
   Matrix createModelMatrix(double translate[3]  , double scale[3] , double rotate[3] );
   Matrix createRotationMatrix( double rotate[3]);
   double *transform(double vector[3] , Matrix matriz);

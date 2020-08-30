@@ -121,26 +121,28 @@ void Render::glCreateWindow(int width, int height){
       matrix[i][j] = new int[3];
     };
   };
+  glViewPort(0,0,width, height);
 };
 void Render::glViewPort(int x, int y, int width, int height){
-  try
-  {
-    if ((x + width <= this->width) && (y + height <= this->height))
-    {
+  try{
+    if ((x + width <= this->width) && (y + height <= this->height)){
       x_view = x;
       y_view = y;
       view_height = height;
       view_width = width;
-    }
-    else
-    {
+      double vMatrix[4][4] = {
+        {double(width)/2 , 0,0,x+double(width)/2},
+        {0, double(height)/2, 0, y + double(height)/2},
+        {0,0,0.5,0.5},
+        {0,0,0,1}
+      };
+      viewPortMatrix = Matrix(vMatrix);
+    }else{
       throw 1;
     }
   }
-  catch (int error)
-  {
-    if (error == 1)
-    {
+  catch (int error){
+    if (error == 1){
       cout << "ERROR: Viewport no puede salirse de la ventana" << endl;
       exit(0);
     }
@@ -413,12 +415,9 @@ void Render::glFinish(string name){
   //Color pallete (NONE)
 
   //Raw pixel data
-  for (int i = 0; i < height; i++)
-  {
-    for (int j = 0; j < width; j++)
-    {
-      for (int k = 0; k < 3; k++)
-      {
+  for (int i = 0; i < height; i++){
+    for (int j = 0; j < width; j++){
+      for (int k = 0; k < 3; k++){
         int valor = matrix[j][i][k];
         archivo.write((char *)&valor, 1);
       }
@@ -482,13 +481,15 @@ void Render::glFinishZBuffer(string name){
 };
 
 double * Render::transform(double vector[3] , Matrix matriz){ 
+  Matrix t0 = viewPortMatrix * projectionMatrix;
+  Matrix t1 = t0 * camMatrix ;
+  Matrix t2 = t1 * matriz; 
   double augVertex[4] = {vector[0] , vector[1] , vector[2] , 1};
-  double *tranVertex = multiplyVM(matriz , augVertex);
+  double *tranVertex = multiplyVM(t2 , augVertex);
   double *result = new double[3];
   result[0] = tranVertex[0]/tranVertex[3];
   result[1] = tranVertex[1]/tranVertex[3];
   result[2] = tranVertex[2]/tranVertex[3];
-
   delete tranVertex;
   return result;
 }
@@ -511,7 +512,41 @@ void Render::createViewMatrix(double camPosition[3] , double camRotation[3]){
   };
   double **inverted = inversa(cMatrixA);
   camMatrix = Matrix(inverted);
+  for (int i = 0 ; i < 4; i++){
+    delete[]inverted[i];
+  }
+  delete inverted;
   // TODO REVISAR USO DE MEMORIA
+}
+
+void Render::lookAt(double eye[3], double camPosition[3]){
+  double* forward = substract(camPosition, eye , 3);
+  double *forwardN = normalize(forward,3);
+  double *randomVector = new double[3];
+  randomVector[0] = 0;
+  randomVector[1] = 1;
+  randomVector[2] = 0;
+  double *right = cross(randomVector, forwardN );
+  double *rightN = normalize(right , 3);
+  double *up = cross(forwardN , rightN);
+  double *upN = normalize(up , 3);
+  
+  double matriz[4][4] = {
+    {rightN[0], upN[0], forwardN[0], camPosition[0]},
+    {rightN[1], upN[1], forwardN[1], camPosition[1]},
+    {rightN[2], upN[2], forwardN[2], camPosition[2]},
+    {0,0,0,1}
+  };
+
+  camMatrix = Matrix(matriz);
+  // camMatrix.toString();
+  // exit(1);
+
+  delete upN;
+  delete up;
+  delete randomVector;
+  delete forwardN;
+  delete rightN;
 }
 
 Matrix Render::createModelMatrix(double translate[3]  , double scale[3] , double rotate[3]){
@@ -574,6 +609,18 @@ Matrix Render::createRotationMatrix(double rotate[3]){
   return m1;
 }
 
+void Render::createProjectionMatrix(double n , double f, double fov ){
+  double t = tan((fov * PI / 180)/2)*n;
+  double r = t * view_width/view_height;
+  double pMatrix[4][4] = {
+    {n / r, 0, 0, 0},
+    {0, n / t, 0, 0},
+    {0, 0, -(f+n)/(f-n), -(2*f*n)/(f-n)},
+    {0, 0, -1, 0}
+  };
+  projectionMatrix = Matrix(pMatrix);
+}
+
 double *Render::baryCoords( double *v1 , double* v2 , double *v3 , double *punto ){
   double *result = new double[3];
   try{
@@ -601,17 +648,17 @@ void Render::triangle_bc(double v1[3] ,
     string shader){
   int *_color = new int[3];
   int minx = int(min(v1[0] , min(v2[0], v3[0])));
-  int miny = int(min(v1[1], min(v2[1], v3[1])));
+  int miny = int(min(v1[1] , min(v2[1], v3[1])));
 
-  int maxx = int(max(v1[0], max(v2[0], v3[0])));
-  int maxy = int(max(v1[1], max(v2[1], v3[1])));
+  int maxx = int(max(v1[0] , max(v2[0], v3[0])));
+  int maxy = int(max(v1[1] , max(v2[1], v3[1])));
   for (int i = minx; i <= maxx; i++){      
     for (int j = miny; j <= maxy; j++){
       double p[2] = {(double)i, (double)j};
       double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
       if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
         double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
-        if (i < width && j < height && i>=0 && j >=0){
+        if (i < width && j < height && i>=0 && j >=0 && z >=0 && z <= 1){
           if (z >= zbuffer[i][j] && intensity >=0){
             if (shader == "toonShader"){
               _color = toonShader(bary , hasTexture , texcoords, normals , color );
@@ -643,7 +690,7 @@ void Render::triangle_bc(double v1[3] ,
             }
             glVertexAbs(j, i, _color );
           }
-          if (z > zbuffer[i][j]){
+          if (z >= zbuffer[i][j]){
             zbuffer[i][j] = z;
           }
         }
@@ -671,32 +718,32 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       v0[0] = vertices[faces[i][j][0] - 1][0];
       v0[1] = vertices[faces[i][j][0] - 1][1];
       v0[2] = vertices[faces[i][j][0] - 1][2];
-      int x0 = int(v0[0] * scale[0] + transform[0]) % width;
-      int y0 = int(v0[1] * scale[1] + transform[1]) % height;
-      double z0 = v0[2] * scale[2] + transform[2];
+      double *tr = this->transform(v0 , modelMatrix);
+      double z0 = tr[2];
       if (z0 <= minZ){
         minZ = z0;
       }
       if(z0>=maxZ){
         maxZ = z0;
       }
+      delete tr;
     }
   }
   for (int i = 0 ; i < numFaces ; i++){
       double v0[3];
       double v1[3];
       double v2[3];
-      light[0] = 00 ; //x
-      light[1] = 00;  //y
-      light[2] = 100;//z
+      light[0] = 0; //x
+      light[1] = 0;  //y
+      light[2] = 1;//z
       v0[0] = vertices[ faces[i][0][0] - 1 ][0];
       v0[1] = vertices[ faces[i][0][0] - 1 ][1];
       v0[2] = vertices[ faces[i][0][0] - 1 ][2];
       
       double *v0T = this->transform(v0 , modelMatrix);
-      v0[0] =  v0T[0];//(v0[0]*scale[0] +transform[0]);
-      v0[1] =  v0T[1];//(v0[1]*scale[1] +transform[1]);
-      v0[2] =  v0T[2];//(v0[2]*scale[2] +transform[2]);
+      v0[0] =  v0T[0];
+      v0[1] =  v0T[1];
+      v0[2] =  v0T[2];
       delete v0T;
 
       v1[0] = vertices[ faces[i][1][0] - 1][0];
@@ -704,9 +751,9 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       v1[2] = vertices[ faces[i][1][0] - 1][2];
       
       double *v1T = this->transform(v1, modelMatrix);
-      v1[0] = v1T[0];// (v1[0]*scale[0] +transform[0]);
-      v1[1] = v1T[1];// (v1[1]*scale[1] +transform[1]);
-      v1[2] = v1T[2];// (v1[2]*scale[2] +transform[2]);
+      v1[0] = v1T[0];
+      v1[1] = v1T[1];
+      v1[2] = v1T[2];
       delete v1T;
 
       v2[0] = vertices[ faces[i][2][0] - 1][0];
@@ -714,9 +761,9 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       v2[2] = vertices[ faces[i][2][0] - 1][2];
 
       double *v2T = this->transform(v2, modelMatrix);
-      v2[0] = v2T[0];// (v2[0]*scale[0] +transform[0]);
-      v2[1] = v2T[1];// (v2[1]*scale[1] +transform[1]);
-      v2[2] = v2T[2];// (v2[2]*scale[2] +transform[2]);
+      v2[0] = v2T[0];
+      v2[1] = v2T[1];
+      v2[2] = v2T[2];
       delete v2T;
 
       double vt0[2];
@@ -776,7 +823,7 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       thisNormals[0][0] = normals[faces[i][0][2] - 1][0];
       thisNormals[0][1] = normals[faces[i][0][2] - 1][1];
       thisNormals[0][2] = normals[faces[i][0][2] - 1][2];
-      double * transNormals0 = this->transform(thisNormals[0] , rotationMatrix);
+      double * transNormals0 = this->dirTransform(thisNormals[0] , rotationMatrix);
       thisNormals[0][0] = transNormals0[0];
       thisNormals[0][1] = transNormals0[1];
       thisNormals[0][2] = transNormals0[2];
@@ -786,7 +833,7 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       thisNormals[1][0] = normals[faces[i][1][2] - 1][0];
       thisNormals[1][1] = normals[faces[i][1][2] - 1][1];
       thisNormals[1][2] = normals[faces[i][1][2] - 1][2];
-      double* transNormals1 = this->transform(thisNormals[1], rotationMatrix);
+      double* transNormals1 = this->dirTransform(thisNormals[1], rotationMatrix);
       thisNormals[1][0] = transNormals1[0];
       thisNormals[1][1] = transNormals1[1];
       thisNormals[1][2] = transNormals1[2];
@@ -796,7 +843,7 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
       thisNormals[2][0] = normals[faces[i][2][2] - 1][0];
       thisNormals[2][1] = normals[faces[i][2][2] - 1][1];
       thisNormals[2][2] = normals[faces[i][2][2] - 1][2];
-      double* transNormals2 = this->transform(thisNormals[2], rotationMatrix);
+      double* transNormals2 = this->dirTransform(thisNormals[2], rotationMatrix);
       thisNormals[2][0] = transNormals2[0];
       thisNormals[2][1] = transNormals2[1];
       thisNormals[2][2] = transNormals2[2];
@@ -807,7 +854,7 @@ void Render::loadModel(string name , double transform[3] , double scale[3] , dou
         v3[0] = vertices[faces[i][3][0] - 1][0];
         v3[1] = vertices[faces[i][3][0] - 1][1];
         v3[2] = vertices[faces[i][3][0] - 1][2];
-        double *v3T = this->transform(v3 , modelMatrix);
+        double *v3T = this->dirTransform(v3 , rotationMatrix);
         v3[0] = v3T[0];
         v3[1] = v3T[1];
         v3[2] = v3T[2];
@@ -872,9 +919,9 @@ int* Render::gouradShader(double baryCoords[3],
     double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
     double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
     int* texColor = texture.getColor(tx,ty);
-    b = double(texColor[0]);//b * (double(texColor[0]) / double(255));
-    g = double(texColor[1]);//g * (double(texColor[1]) / double(255));
-    r = double(texColor[2]);//r * (double(texColor[2]) / double(255));
+    b = double(texColor[0]);
+    g = double(texColor[1]);
+    r = double(texColor[2]);
     delete [] texColor;
   }
   double normal[3];
@@ -887,7 +934,7 @@ int* Render::gouradShader(double baryCoords[3],
     g = g * intensity;
     r = r * intensity;
   delete[] nnormal;
-  int *finalColor = new int[3];//{int(r), int(g), int(b)};
+  int *finalColor = new int[3];
   finalColor[2] = r;  
   finalColor[1] = g;
   finalColor[0] = b;  
