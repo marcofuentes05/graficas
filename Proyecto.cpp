@@ -26,70 +26,88 @@ Matrix multi(Matrix  &m0 , Matrix &m1){
 int main(){  
   // Implementacion
   string modelPath="models/helmet.obj";
-  string shader = "";
+  string shader = "toonGold";
   Render r;
   r.glInit();
   r.glClearColor(0.0, 0.0, 0.0);
   r.glColor(1.0, 1.0, 1.0);
-  r.glCreateWindow(768, 432);
+  r.glCreateWindow(1280, 720);
   r.glClear();
   r.createProjectionMatrix();
-  // double vector[3] = {0,0,0};
-  // double vector1[3] = {500, 500, 1000};
-  // r.createViewMatrix(vector1, vector);
-  
-  // cout << "Comenzando renderizado..." << endl;
-  // double transform[3] = {500, 650,1};
-  // double scale[3] = {2000, 2000, 2000}; //Para el casco
-  // double rotate[3] = {25,25,0};
-  // r.loadModel(modelPath, transform, scale, rotate , false, false, shader);
-  // cout << "renderizado terminado!" << endl;
-
-
-  // // PARA EL PLANETA
-  // modelPath = "models/earth.obj";
-  // r.setTexture("models/textures/moon.bmp");
-  //   cout << "Comenzando renderizado..." << endl;
-  // double transform0[3] ={ 1500, 500, 0 };
-  // double scale0[3] = {1, 1, 1};
-  // double rotate0[3] = {0, 30, 0};
-  // double camPosition[3] = {2,2,0};
-  // // r.lookAt(transform0 , camPosition);
-  // r.loadModel(modelPath, transform0, scale0, rotate0, false, true, shader);
-  // cout << "renderizado terminado!" << endl;
 
   // // PARA EL MODELO
-  modelPath = "models/model.obj";
-  r.setTexture("models/textures/model.bmp");
-    cout << "Comenzando renderizado..." << endl;
-  double transform0[3] ={ 1, 0, -5 };
-  double scale0[3] = {1, 1, 1};
-  double rotate0[3] = {0, 0, 0};
-  double camPosition[3] = {0,0,1};
-  r.lookAt(transform0 , camPosition);
+  shader = "randomChannel";
+  modelPath = "models/aircraft.obj";
+  r.setTexture("models/textures/aircraft.bmp");
+  double transform0[3] ={ 30, 35, -100 };
+  double scale0[3] = {7, 7, 7};
+  double rotate0[3] = {90,-30, 0};
+  double camPosition[3] = {0,0,4};
+  double camTransform[3] = {0,0,-100};
+  r.lookAt(camTransform , camPosition);
+  
+  cout << "Comenzando renderizado..." << endl;
   r.loadModel(modelPath, transform0, scale0, rotate0, false, true, shader);
   cout << "renderizado terminado!" << endl;
 
+  shader = "toonGold";
+  modelPath = "models/model.obj";
+  r.setTexture("models/textures/model.bmp");
+  double transform1[3] ={ 5, -20, -60 };
+  double scale1[3] = {10, 10, 10};
+  double rotate1[3] = {0,30, 0};
+
   cout << "Comenzando renderizado..." << endl;
-  double transform1[3] = {-1, 0, -5};
-  // double scale0[3] = {1, 1, 1};
-  // double rotate0[3] = {0, 0, 0};
-  // double camPosition[3] = {0, 0, 0};
-  // r.lookAt(transform0, camPosition);
-  r.loadModel(modelPath, transform1, scale0, rotate0, false, true, shader);
+  r.loadModel(modelPath, transform1, scale1, rotate1, false, true, shader);
   cout << "renderizado terminado!" << endl;
 
-  double transform2[3] = {-1, 0, -2};
-  r.loadModel(modelPath, transform2, scale0, rotate0, false, true, shader);
-  // // PARA LA COCA
-  // modelPath = "models/coca.obj";
-  // r.setTexture("models/textures/earthDay.bmp");
-  // double transform1[3] = {250, 900, 0};
-  // double scale1[3] = {3, 3,3};
-  // double rotate1[3] = {60,0,0};
-  // r.loadModel(modelPath, transform1, scale1, rotate1, false, false, shader);
+  shader = "toonShader";
+  modelPath = "models/coca.obj";
+  r.glColor(1,0,0);
+  double transform2[3] = {-160, -130, -600};
+  double scale2[3] = {1, 1, 1};
+  double rotate2[3] = {0, 0, 0};
 
-  // // shader = "gouradShader";
-  // // r.loadModel(modelPath, transform, scale, rotate, false, hasTexture, shader);
-  r.glFinish("results/tst.bmp");
+  cout << "Comenzando renderizado..." << endl;
+  r.loadModel(modelPath, transform2, scale2, rotate2, false, false, shader);
+  cout << "renderizado terminado!" << endl;
+
+  shader = "inverse";
+  modelPath = "models/helmet.obj";
+  r.glColor(0,0.1,1);
+  r.glColor(0.3, 0.3, 0.3);
+  double transform3[3] = {7, -5, -20};
+  double scale3[3] = {10, 10, 10};
+  double rotate3[3] = {30, 0, 0};
+
+  cout << "Comenzando renderizado..." << endl;
+  r.loadModel(modelPath, transform3, scale3, rotate3, false, false, shader);
+  cout << "renderizado terminado!" << endl;
+
+  shader = "random";
+  modelPath = "models/torre.obj";
+  r.setTexture("models/textures/torre.bmp");
+  r.glColor(0.5, 0.5, 0.5);
+  double transform4[3] = {-70, -70, -150};
+  double scale4[3] = {6, 6, 6};
+  double rotate4[3] = {0, 0, 0};
+
+  cout << "Comenzando renderizado..." << endl;
+  r.loadModel(modelPath, transform4, scale4, rotate4, false, true, shader);
+  cout << "renderizado terminado!" << endl;
+
+
+  shader = "toonShader";
+  modelPath = "models/andromeda.obj";
+  r.setTexture("models/textures/aircraft.bmp");
+  double transform5[3] = {-300, 300, -800};
+  double scale5[3] = {10, 10, 10};
+  double rotate5[3] = {0, 0, 0};
+
+  cout << "Comenzando renderizado..." << endl;
+  r.loadModel(modelPath, transform5, scale5, rotate5, false, false, shader);
+  cout << "renderizado terminado!" << endl;
+  r.glFinish("results/sinFondo.bmp");
+
+  r.PostProcessEffect("results/sinFondo.bmp", "models/textures/wxp.bmp");
 }
