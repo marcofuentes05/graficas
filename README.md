@@ -14,5 +14,6 @@ g++ *.cpp -o output #Para compilar
 ./output #Para ejecutar
 ```
 
-Y produce los siguientes archivos en formato BMP:
+Y produce el siguiente archivo en formato BMP:
+
 ![Resultados](./Resultados.png "Resultados")
