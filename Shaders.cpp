@@ -16,22 +16,6 @@ Gráficas por Computadora - Segundo Semestre 2020 - UVG
 #include <stdlib.h>
 using namespace std;
 
-// Shaders::Shaders(){
-//   cout << "CONSTRUCTOR VACIO" << endl;  
-// };
-
-// Shaders::Shaders(Render *r){
-//   Render* (render) =  r;
-//   cout << "Ya cargamos el render" << endl;
-//   string algo = render->getSom();
-//   cout <<  algo<<endl;
-//   cout << "Y ya salimos :)" << endl;
-// }
-
-// void Shaders::setRenderer(Render*r){
-//   Render* (render) = r;
-// };
-
 int * gourad(Render *render,
     double baryCoords[3], 
     bool hasTexture ,

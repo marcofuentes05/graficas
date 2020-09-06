@@ -1,7 +1,6 @@
 /* -------------------------------------------------------------------  
 Render.cpp
-Algoritmo que escribe un archivo BMP con el nombre de 'SR5.bmp',
-representando un wireframde de un modelo OBJ.
+Clase que renderiza modelos OBJ a formato BMP.
 Marco Fuentes - 18188
 Gráficas por computadora - Segundo Semestre 2020 - UVG
 ------------------------------------------------------------------- */
@@ -56,17 +55,17 @@ double* multiplyVM(Matrix m , double* v){
 }
 
 //Helper functions.
-int abs(int m)
-{
+int abs(int m){
   return (m < 0) ? -m : m;
 }
-void swap(int *a, int *b)
-{
+
+void swap(int *a, int *b){
   int ta = *a;
   int tb = *b;
   *a = tb;
   *b = ta;
 }
+
 void Render::glInit()
 {
   width = 0;
@@ -77,7 +76,9 @@ void Render::glInit()
   view_height = 0;
   glClearColor(0.0, 0.0, 0.0);
   glColor(0.0, 0.0, 0.0);
+  fov = 60;
 };
+
 void Render::glCreateWindow(int width, int height){
   // Limpiar memoria en caso exista anteriormente
   int w = this->width;
@@ -123,6 +124,7 @@ void Render::glCreateWindow(int width, int height){
   };
   glViewPort(0,0,width, height);
 };
+
 void Render::glViewPort(int x, int y, int width, int height){
   try{
     if ((x + width <= this->width) && (y + height <= this->height)){
@@ -148,40 +150,21 @@ void Render::glViewPort(int x, int y, int width, int height){
     }
   }
 }
+
 void Render::glClearColor(double r, double g, double b)
 {
   this->COLOR_CLEAR[2] = int(r * 255);
   this->COLOR_CLEAR[1] = int(g * 255);
   this->COLOR_CLEAR[0] = int(b * 255);
 };
+
 void Render::glColor(double r, double g, double b)
 {
   this->COLOR_VERTEX[2] = (r * 255);
   this->COLOR_VERTEX[1] = (g * 255);
   this->COLOR_VERTEX[0] = (b * 255);
 };
-string Render::toString()
-{
-  return "Width: " + to_string(width) + "\nHeight: " + to_string(height);
-}
-string Render::getMatrix()
-{
-  string r = "MATRIZ: \n";
-  for (int i = 0; i < height; i++)
-  {
-    for (int j = 0; j < width; j++)
-    {
-      r += "(";
-      for (int k = 0; k < 3; k++)
-      {
-        r += to_string(matrix[j][i][k]) + " , ";
-      };
-      r += ")  ";
-    };
-    r += "\n";
-  };
-  return r;
-}
+
 void Render::glClear(){
   for (int i = 0; i < height; i++){
     for (int j = 0; j < width; j++){
@@ -192,12 +175,12 @@ void Render::glClear(){
     };
   };
 }
-int Render::GDCtoPixels(double x, bool isX)
-{
+
+int Render::GDCtoPixels(double x, bool isX){
   return isX ? (int)(x_view + ((x + 1) * view_width / 2)) : (int)(y_view + ((x + 1) * view_height / 2));
 }
-void Render::glVertex(double x, double y)
-{
+
+void Render::glVertex(double x, double y){
   //x,y son decimales pertenecientes a [-1,1]
   int x_coor, y_coor = 0;
   x_coor = GDCtoPixels(x, true);
@@ -206,6 +189,7 @@ void Render::glVertex(double x, double y)
   matrix[y_coor][x_coor][1] = COLOR_VERTEX[1];
   matrix[y_coor][x_coor][2] = COLOR_VERTEX[2];
 };
+
 void Render::glLine(double x0, double y0, double x1, double y1)
 {
   //Convertir coordenadas en pixeles
@@ -267,6 +251,7 @@ void Render::glLine(double x0, double y0, double x1, double y1)
     }
   }
 }
+
 void Render::glLineAbs(int x_0, int y_0, int x_1, int y_1 , bool fromOBJ){
   int dx = abs(x_1 - x_0);
   int dy = abs(y_1 - y_0);
@@ -312,72 +297,13 @@ void Render::glLineAbs(int x_0, int y_0, int x_1, int y_1 , bool fromOBJ){
     }
   }
 }
+
 void Render::glVertexAbs(int x , int y, int *color){
   matrix[y][x][0] = color[0];
   matrix[y][x][1] = color[1];
   matrix[y][x][2] = color[2];
 };
-void Render::glLineAbsZBuffer(int x_0, int y_0, double z0 ,int x_1, int y_1, double z1)
-{
-  int dx = abs(x_1 - x_0);
-  int dy = abs(y_1 - y_0);
 
-  bool esV = dy > dx;
-  if (esV){
-    swap(x_0, y_0);
-    swap(x_1, y_1);
-  }
-  if (x_0 > x_1){
-    swap(x_0, x_1);
-    swap(y_0, y_1);
-  }
-  double offset = 0.0;
-  double limit = 0.5;
-
-  dx = abs(x_1 - x_0);
-  dy = abs(y_1 - y_0);
-
-  double m;
-  m = double(dy) / double(dx);
-  int y = y_0;
-
-  for (int x = x_0; x < x_1 + 1; x++){
-    if (esV){
-      matrix[y][x][0] = COLOR_VERTEX[0];
-      matrix[y][x][1] = COLOR_VERTEX[1];
-      matrix[y][x][2] = COLOR_VERTEX[2];
-    }else{
-      matrix[x][y][0] = COLOR_VERTEX[0];
-      matrix[x][y][1] = COLOR_VERTEX[1];
-      matrix[x][y][2] = COLOR_VERTEX[2];
-    }
-    offset = offset + m;
-    if (offset > limit){
-      if (y_0 < y_1){
-        y = y + 1;
-      }else
-      {
-        y = y - 1;
-      }
-      limit = limit + 1;
-    }
-  }
-}
-void Render::glDrawSquare(double *ld, double *lu, double *rd, double *ru)
-{
-  //Todos son arrays de dos elementos indicando las coordenadas del vertice
-  glLine(ld[0], ld[1], lu[0], lu[1]);
-  glLine(lu[0], lu[1], ru[0], ru[1]);
-  glLine(ru[0], ru[1], rd[0], rd[1]);
-  glLine(rd[0], rd[1], ld[0], ld[1]);
-}
-void Render::glDrawPolygon(int vertices[][2], int size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    glLineAbs(vertices[i][0], vertices[i][1], vertices[(i + 1) % size][0], vertices[(i + 1) % size][1]);
-  }
-}
 void Render::glFinish(string name){
   // Crear archivo
   ofstream archivo;
@@ -425,6 +351,7 @@ void Render::glFinish(string name){
   }
   archivo.close();
 };
+
 void Render::glFinishZBuffer(string name){
   // Crear archivo
   ofstream archivo;
@@ -479,45 +406,6 @@ void Render::glFinishZBuffer(string name){
   archivo.close();
 };
 
-double * Render::transform(double vector[3] , Matrix matriz){ 
-  Matrix t0 = viewPortMatrix * projectionMatrix;
-  Matrix t1 = t0 * camMatrix ;
-  Matrix t2 = t1 * matriz; 
-  double augVertex[4] = {vector[0] , vector[1] , vector[2] , 1};
-  double *tranVertex = multiplyVM(t2 , augVertex);
-  double *result = new double[3];
-  result[0] = tranVertex[0]/tranVertex[3];
-  result[1] = tranVertex[1]/tranVertex[3];
-  result[2] = tranVertex[2]/tranVertex[3];
-  delete tranVertex;
-  return result;
-}
-
-double* Render::dirTransform(double vector[3] , Matrix vMatrix){
-  double augVertex[4] = {vector[0] , vector[1] , vector[2] , 0};
-  double *transVertex = multiplyVM(vMatrix , augVertex); //DELETE THIS
-  return transVertex;
-}
-
-void Render::createViewMatrix(double camPosition[3] , double camRotation[3]){
-  double scale[3] = {1,1,1};
-  camMatrix = createModelMatrix(camPosition , scale, camRotation);
-  double**cMatrix = camMatrix.getMatrix();
-  double cMatrixA[4][4] = {
-    {cMatrix[0][0] , cMatrix[0][1] , cMatrix[0][2] , cMatrix[0][3]},
-    {cMatrix[1][0] , cMatrix[1][1] , cMatrix[1][2] , cMatrix[1][3]},
-    {cMatrix[2][0] , cMatrix[2][1] , cMatrix[2][2] , cMatrix[2][3]},
-    {cMatrix[3][0] , cMatrix[3][1] , cMatrix[3][2] , cMatrix[3][3]}
-  };
-  double **inverted = inversa(cMatrixA);
-  camMatrix = Matrix(inverted);
-  for (int i = 0 ; i < 4; i++){
-    delete[]inverted[i];
-  }
-  delete inverted;
-  // TODO REVISAR USO DE MEMORIA
-}
-
 void Render::lookAt(double eye[3], double camPosition[3]){
   double* forward = substract(camPosition, eye , 3);
   double *forwardN = normalize(forward,3);
@@ -548,356 +436,48 @@ void Render::lookAt(double eye[3], double camPosition[3]){
   delete rightN;
 }
 
-Matrix Render::createModelMatrix(double translate[3]  , double scale[3] , double rotate[3]){
-  double translateMatrix[4][4] = {
-    {1, 0, 0 , translate[0]},
-    {0, 1, 0 , translate[1]},
-    {0, 0, 1 , translate[2]},
-    {0, 0, 0 , 1}
-  };
-  double scaleMatrix[4][4] = {
-    {scale[0] , 0 , 0 , 0},
-    {0 , scale[1] , 0 , 0},
-    {0 , 0 , scale[2] , 0},
-    {0 , 0 , 0 , 1}
-  };
-  Matrix translateM(translateMatrix);
-  Matrix scaleM(scaleMatrix);
-  Matrix rotationM = createRotationMatrix(rotate);
-
-  Matrix mul1 = (translateM * rotationM);
-  Matrix mul2 =  mul1 * scaleM;
-  return mul2;
-}
-
 double toRad(double deg){
   return deg * PI / 180;
 }
 
-Matrix Render::createRotationMatrix(double rotate[3]){
-  double pitch = toRad(rotate[0]);
-  double yaw = toRad(rotate[1]);
-  double roll = toRad(rotate[2]);
+void Render::rtRender(){
+  for (int j = 0 ; j < height ; j++){
+    for (int i = 0 ; i < width ; i++){
+      // Convertir a NDC
+      double px = 2*((double(i)+0.5)/width)-1;
+      double py = 2 * ((double(j) + 0.5) / height) - 1;
 
-  double rotationX[4][4] = {
-    {1, 0, 0, 0},
-    {0, cos(pitch), -sin(pitch), 0},
-    {0, sin(pitch), cos(pitch), 0},
-    {0,0,0,1}
-  };
-  Matrix rx(rotationX);
+      // Calcular FOV suponiendo que el nearPlane esta a 1m de la camara
+      double t = tan((fov*PI/180)/2);
+      double r = t * width /height;
 
-  double rotationY[4][4] = {
-    {cos(yaw), 0, sin(yaw), 0},
-    {0, 1, 0, 0},
-    {-sin(yaw), 0, cos(yaw), 0},
-    {0, 0, 0, 1}
-  };
-  Matrix ry(rotationY);
+      px = px * r;
+      py = py * t;
 
-  double rotationZ[4][4] = {
-    {cos(roll), -sin(roll), 0, 0},
-    {sin(roll), cos(roll), 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}
-  };
-  Matrix rz(rotationZ);
-
-  Matrix m0 = rx * ry;
-  Matrix m1 = m0 * rz;
-  return m1;
-}
-
-void Render::createProjectionMatrix(double n , double f, double fov ){
-  double t = tan((fov * PI / 180)/2)*n;
-  double r = t * view_width/view_height;
-  double pMatrix[4][4] = {
-    {n / r, 0, 0, 0},
-    {0, n / t, 0, 0},
-    {0, 0, -(f+n)/(f-n), -(2*f*n)/(f-n)},
-    {0, 0, -1, 0}
-  };
-  projectionMatrix = Matrix(pMatrix);
-}
-
-double *Render::baryCoords( double *v1 , double* v2 , double *v3 , double *punto ){
-  double *result = new double[3];
-  try{
-    result[0] = (((v2[1] - v3[1]) * (punto[0] - v3[0]) + (v3[0] - v2[0]) * (punto[1] - v3[1])) / 
-                ((v2[1] - v3[1]) * (v1[0] - v3[0]) + (v3[0] - v2[0]) * (v1[1] - v3[1])));
-    result[1] = ( ((v3[1] - v1[1])*(punto[0] - v3[0]) + (v1[0] - v3[0])*(punto[1] - v3[1]) ) /
-                ((v2[1] - v3[1])*(v1[0] - v3[0]) + (v3[0] - v2[0])*(v1[1] - v3[1])) );
-    result[2] = 1 - result[0] - result[1];
-  }catch(...){
-    result[0] = -1;
-    result[1] = -1;
-    result[2] = -1;
-  }
-  return result;
-};
-
-void Render::triangle_bc(double v1[3] , 
-    double v2[3] , 
-    double v3[3] , 
-    int color[3] , 
-    double**texcoords , 
-    bool hasTexture , 
-    double intensity,
-    double **normals,
-    string shader){
-  int *_color = new int[3];
-  int minx = int(min(v1[0] , min(v2[0], v3[0])));
-  int miny = int(min(v1[1] , min(v2[1], v3[1])));
-
-  int maxx = int(max(v1[0] , max(v2[0], v3[0])));
-  int maxy = int(max(v1[1] , max(v2[1], v3[1])));
-  for (int i = minx; i <= maxx; i++){      
-    for (int j = miny; j <= maxy; j++){
-      double p[2] = {(double)i, (double)j};
-      double *bary = baryCoords(v1, v2, v3, p); // DELETE[] THIS
-      if (bary[0] >= 0 && bary[1] >= 0 && bary[2] >= 0){
-        double z = v1[2] * bary[0] + v2[2] * bary[1] + v3[2] * bary[2];
-        if ( i < width 
-          && j < height 
-          && i > 0 
-          && j > 0 && z >=-1 && z <= 1){
-          if (z < zbuffer[i][j]){
-            if (shader == "toonShader"){
-              _color = toonShader(bary , hasTexture , texcoords, normals , color );
-            }else if (shader == "gouradShader"){
-              _color = gouradShader(bary , hasTexture , texcoords, normals , color );
-            }else if (shader == "random"){
-              _color = randomShader(bary , hasTexture , texcoords, normals , color );
-            }else if (shader == "unlit"){
-              _color = unlitShader(bary, hasTexture, texcoords, normals, color);
-            }else if(shader == "inverse"){
-              _color = inverseShader(bary, hasTexture, texcoords, normals, color);
-            }else if(shader == "randomChannel"){
-              _color = randomChannelShader(bary, hasTexture, texcoords, normals, color);
-            }else if (shader == "toonGold"){
-              _color = toonShaderGold(bary, hasTexture, texcoords, normals, color);
-            }else{
-              _color[0] = int(double(color[0]) * intensity);
-              _color[1] = int(double(color[1]) * intensity);
-              _color[2] = int(double(color[2]) * intensity);
-              if(hasTexture){
-                double tx = texcoords[0][0] * bary[0] + texcoords[1][0] * bary[1] + texcoords[2][0]*bary[2];
-                double ty = texcoords[0][1] * bary[0] + texcoords[1][1] * bary[1] + texcoords[2][1]*bary[2];
-                int* texColor = texture.getColor(tx,ty);
-                _color[0] = _color[0] * (double(texColor[0]) / double(255));
-                _color[1] = _color[1] * (double(texColor[1]) / double(255));
-                _color[2] = _color[2] * (double(texColor[2]) / double(255));
-                delete [] texColor;
-              }
-            }
-            glVertexAbs(j, i, _color );
-            zbuffer[i][j] = z;
+      double direction[3] = {px,py,-1}; //Camara siempre apunta a -z
+      double *normalDirection = normalize(direction,3); // DELETE THIS
+      Material material;
+      bool hasM = false;
+      for (auto item : scene){
+        Intersect intersect = item.ray_intersect(camPosition , normalDirection);
+        if (!intersect.getIsNone()){ 
+          if ( intersect.getDistance() < zbuffer[i][j] ){
+            zbuffer[i][j] = intersect.getDistance();
+            material = item.getMaterial();
+            double *diffuse = material.getDiffuse();
+            int iDiffuse[3] = {
+              int(diffuse[0]*255),
+              int(diffuse[1]*255),
+              int(diffuse[2]*255)
+            };
+            glVertexAbs( j , i , iDiffuse);
           }
         }
-      }
-      delete[] bary;
+      } 
+      delete normalDirection;
     }
   }
 }
-
-void Render::loadModel(string name , double transform[3] , double scale[3] , double rotate[3] , bool isWireframe , bool hasTexture, string shader){
-  OBJ obj(name);
-  obj.read();
-  int numFaces = obj.getNumFaces();
-  int* facesLen = obj.getFacesLen();
-  int *** faces = obj.getFaces();
-  double** vertices = obj.getVertices();
-  double ** texCoords = obj.getTexCoords();
-  double ** normals = obj.getNormals();
-  Matrix modelMatrix = createModelMatrix(transform, scale, rotate);
-  Matrix rotationMatrix = createRotationMatrix(rotate);
-  double v0[3];
-  double v1[2];
-  for(int i = 0 ; i < numFaces ; i++){
-    for(int j = 0 ; j<facesLen[i]; j ++){
-      v0[0] = vertices[faces[i][j][0] - 1][0];
-      v0[1] = vertices[faces[i][j][0] - 1][1];
-      v0[2] = vertices[faces[i][j][0] - 1][2];
-      double *tr = this->transform(v0 , modelMatrix);
-      double z0 = tr[2];
-      if (z0 <= minZ){
-        minZ = z0;
-      }
-      if(z0>=maxZ){
-        maxZ = z0;
-      }
-      delete tr;
-    }
-  }
-  for (int i = 0 ; i < numFaces ; i++){
-      double v0[3];
-      double v1[3];
-      double v2[3];
-      light[0] =0;
-      light[1] =0;
-      light[2] = 1  ;//z
-      v0[0] = vertices[ faces[i][0][0] - 1 ][0];
-      v0[1] = vertices[ faces[i][0][0] - 1 ][1];
-      v0[2] = vertices[ faces[i][0][0] - 1 ][2];
-      
-      double *v0T = this->transform(v0 , modelMatrix);
-      v0[0] =  v0T[0];
-      v0[1] =  v0T[1];
-      v0[2] =  v0T[2];
-      delete v0T;
-
-      v1[0] = vertices[ faces[i][1][0] - 1][0];
-      v1[1] = vertices[ faces[i][1][0] - 1][1];
-      v1[2] = vertices[ faces[i][1][0] - 1][2];
-      
-      double *v1T = this->transform(v1, modelMatrix);
-      v1[0] = v1T[0];
-      v1[1] = v1T[1];
-      v1[2] = v1T[2];
-      delete v1T;
-
-      v2[0] = vertices[ faces[i][2][0] - 1][0];
-      v2[1] = vertices[ faces[i][2][0] - 1][1];
-      v2[2] = vertices[ faces[i][2][0] - 1][2];
-
-      double *v2T = this->transform(v2, modelMatrix);
-      v2[0] = v2T[0];
-      v2[1] = v2T[1];
-      v2[2] = v2T[2];
-      delete v2T;
-
-      double vt0[2];
-      double vt1[2];
-      double vt2[2];
-      double vt3[2];
-      double **tcoords = new double*[4];
-      tcoords[0] = new double[2];
-      tcoords[0][0]=0;
-      tcoords[0][1]=0;
-      tcoords[1] = new double[2];
-      tcoords[1][0]=0;
-      tcoords[1][1]=0;
-      tcoords[2] = new double[2];
-      tcoords[2][0]=0;
-      tcoords[2][1]=0;
-      tcoords[3] = new double[2];
-      tcoords[3][0]=0;
-      tcoords[3][1]=0;
-      if(hasTexture){
-        vt0[0] = texCoords[faces[i][0][1] - 1 ][0];
-        vt0[1] = texCoords[faces[i][0][1] - 1 ][1];
-
-        vt1[0] = texCoords[faces[i][1][1] - 1 ][0];
-        vt1[1] = texCoords[faces[i][1][1] - 1 ][1];
-
-        vt2[0] = texCoords[faces[i][2][1] - 1 ][0];
-        vt2[1] = texCoords[faces[i][2][1] - 1 ][1];
-        tcoords[0][0] = vt0[0];
-        tcoords[0][1] = vt0[1];
-        
-        tcoords[1][0] = vt1[0];
-        tcoords[1][1] = vt1[1];
-
-        tcoords[2][0] = vt2[0];
-        tcoords[2][1] = vt2[1];
-
-        if (facesLen[i]==4){
-          vt3[0] = texCoords[faces[i][3][1] - 1 ][0];
-          vt3[1] = texCoords[faces[i][3][1] - 1 ][1];
-          tcoords[3][0] = vt3[0];
-          tcoords[3][1] = vt3[1];
-        }
-      }
-
-      double *d1 = substract(v1, v0, 3); // MUST DELETE[] THIS
-      double *d2 = substract(v2, v0, 3); // MUST DELETE[] THIS
-      double *normal = cross(d1, d2); // MUST DELETE[] THIS
-      double *nnormal = normalize(normal , 3); // MUST DELETE[] THIS
-      double *nlight = normalize(light, 3);    // MUST DELETE[] THIS
-      light[0] = nlight[0];
-      light[1] = nlight[1];
-      light[2] = nlight[2];
-      double intensity = dot(nnormal , nlight , 3);
-      
-     // AQUI NORMALS
-      double ** thisNormals = new double*[3];
-      thisNormals[0] = new double[3];
-      thisNormals[0][0] = normals[faces[i][0][2] - 1][0];
-      thisNormals[0][1] = normals[faces[i][0][2] - 1][1];
-      thisNormals[0][2] = normals[faces[i][0][2] - 1][2];
-      double * transNormals0 = this->dirTransform(thisNormals[0] , rotationMatrix);
-      thisNormals[0][0] = transNormals0[0];
-      thisNormals[0][1] = transNormals0[1];
-      thisNormals[0][2] = transNormals0[2];
-      delete transNormals0;
-
-      thisNormals[1] = new double[3];
-      thisNormals[1][0] = normals[faces[i][1][2] - 1][0];
-      thisNormals[1][1] = normals[faces[i][1][2] - 1][1];
-      thisNormals[1][2] = normals[faces[i][1][2] - 1][2];
-      double* transNormals1 = this->dirTransform(thisNormals[1], rotationMatrix);
-      thisNormals[1][0] = transNormals1[0];
-      thisNormals[1][1] = transNormals1[1];
-      thisNormals[1][2] = transNormals1[2];
-      delete transNormals1;
-
-      thisNormals[2] = new double[3];
-      thisNormals[2][0] = normals[faces[i][2][2] - 1][0];
-      thisNormals[2][1] = normals[faces[i][2][2] - 1][1];
-      thisNormals[2][2] = normals[faces[i][2][2] - 1][2];
-      double* transNormals2 = this->dirTransform(thisNormals[2], rotationMatrix);
-      thisNormals[2][0] = transNormals2[0];
-      thisNormals[2][1] = transNormals2[1];
-      thisNormals[2][2] = transNormals2[2];
-      delete transNormals2;
-      triangle_bc(v0,v1,v2, COLOR_VERTEX , tcoords , hasTexture , intensity , thisNormals, shader);
-      if (facesLen[i] == 4){
-        double *v3 = new double[3];
-        v3[0] = vertices[faces[i][3][0] - 1][0];
-        v3[1] = vertices[faces[i][3][0] - 1][1];
-        v3[2] = vertices[faces[i][3][0] - 1][2];
-        double *v3T = this->transform(v3 , modelMatrix);
-        v3[0] = v3T[0];
-        v3[1] = v3T[1];
-        v3[2] = v3T[2];
-        delete v3T;
-
-        thisNormals[2][0] = normals[faces[i][3][2]-1][0];
-        thisNormals[2][1] = normals[faces[i][3][2]-1][1];
-        thisNormals[2][2] = normals[faces[i][3][2]-1][2];
-        double* transNormals3 = this->dirTransform(thisNormals[2], rotationMatrix);
-        thisNormals[2][0] = transNormals3[0];
-        thisNormals[2][1] = transNormals3[1];
-        thisNormals[2][2] = transNormals3[2];
-        delete transNormals3;
-
-        tcoords[1][0] = tcoords[2][0];
-        tcoords[1][1] = tcoords[2][1];
-
-        tcoords[2][0] = vt3[0];
-        tcoords[2][1] = vt3[1];
-        triangle_bc(v0, v2,v3, COLOR_VERTEX , tcoords , hasTexture , intensity , thisNormals, shader) ;
-      }
-
-      delete[] d1;
-      delete[] d2;
-      delete[] normal;
-      delete[] nnormal;
-      delete[] nlight;
-      if(hasTexture){
-        delete[] tcoords[0];
-        delete[] tcoords[1];
-        delete[] tcoords[2];
-        delete[] tcoords[3];
-        delete[] tcoords;
-      }
-  }
-};
-
-void Render::setTexture(string t){
-  texture.openFile(t);
-  texture.read();
-};
 //DESTRUCTOR
 Render::~Render(){
   for (int i = 0; i < width; i++){
@@ -910,383 +490,3 @@ Render::~Render(){
   delete[] matrix;
   // delete[] zbuffer;
 };
-
-string Render::getSom(){
-  return "WIDTH: "+to_string(width)+"\nHEIGHT: "+to_string(height)+"\nFROM SHADER";
-}
-
-int* Render::gouradShader(double baryCoords[3],
-      bool hasTexture,
-      double **texcoords,
-      double **normals,
-      int color[3]){
-  int b=color[0];
-  int g=color[1];
-  int r=color[2];
-  if(hasTexture){
-    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
-    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
-    int* texColor = texture.getColor(tx,ty);
-    b = double(texColor[0]);
-    g = double(texColor[1]);
-    r = double(texColor[2]);
-    delete [] texColor;
-  }
-  double normal[3];
-  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
-  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
-  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
-  double *nnormal = normalize(normal,3);
-  double intensity = dot(nnormal, light , 3);
-    b = b * intensity;
-    g = g * intensity;
-    r = r * intensity;
-  delete[] nnormal;
-  int *finalColor = new int[3];
-  finalColor[2] = r;  
-  finalColor[1] = g;
-  finalColor[0] = b;  
-  if(intensity<=0){
-    finalColor[0] = 0;
-    finalColor[1] = 0;
-    finalColor[2] = 0;
-  }
-  return finalColor;
-}
-
-int* Render::toonShader(double baryCoords[3],
-      bool hasTexture,
-      double **texcoords,
-      double **normals,
-      int color[3]){
-  int b=color[0];
-  int g=color[1];
-  int r=color[2];
-  if(hasTexture){
-    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
-    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
-    int* texColor = texture.getColor(tx,ty);
-    b = b * (double(texColor[0]) / double(255));
-    g = g * (double(texColor[1]) / double(255));
-    r = r * (double(texColor[2]) / double(255));
-    delete [] texColor;
-  }
-  double normal[3];
-  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
-  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
-  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
-  double *nnormal = normalize(normal,3);
-  double intensity = dot(nnormal, light , 3);
-  if (intensity >=0 && intensity <0.2){
-    intensity = 0.1;
-  }else if(intensity >=0.2 && intensity < 0.4){
-    intensity = 0.2;
-  }else if(intensity >=0.4 && intensity < 0.6){
-    intensity = 0.4;
-  }else if(intensity >=0.6 && intensity < 0.8){
-    intensity = 0.6;
-  }else if(intensity >=0.8 && intensity < 1.0){
-    intensity = 0.8;
-  }else if(intensity = 1){
-    intensity = 1;
-  }else{
-    intensity = 0;
-  }
-    b = b * intensity;
-    g = g * intensity;
-    r = r * intensity;
-  delete[] nnormal;
-  int *finalColor = new int[3];
-  finalColor[2] = r;  
-  finalColor[1] = g;
-  finalColor[0] = b;  
-  if(intensity<=0){
-    finalColor[0] = 0;
-    finalColor[1] = 0;
-    finalColor[2] = 0;
-  }
-  return finalColor;
-}
-
-// Introduce estática al modelo
-int* Render::randomShader(
-  double baryCoords[3],
-  bool hasTexture,
-  double **texcoords,
-  double **normals,
-  int color[3]
-){
-  int b=color[0];
-  int g=color[1];
-  int r=color[2];
-  if(hasTexture){
-    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
-    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
-    int* texColor = texture.getColor(tx,ty);
-    b = b * (double(texColor[0]) / double(255));
-    g = g * (double(texColor[1]) / double(255));
-    r = r * (double(texColor[2]) / double(255));
-    delete [] texColor;
-  }
-  double normal[3];
-  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
-  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
-  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
-  double *nnormal = normalize(normal,3);
-  double intensity = dot(nnormal, light , 3);
-  b = (b + rand())%255;
-  g = (g + rand())%255;
-  r = (r + rand())%255;
-  b = b * intensity;
-  g = g * intensity;
-  r = r * intensity;
-  delete[] nnormal;
-  int *finalColor = new int[3];//{int(r), int(g), int(b)};
-  finalColor[2] = r;  
-  finalColor[1] = g;
-  finalColor[0] = b;  
-  if(intensity<=0){
-    finalColor[0] = 0;
-    finalColor[1] = 0;
-    finalColor[2] = 0;
-  }
-  return finalColor;
-}
-
-int* Render::unlitShader(
-  double baryCoords[3],
-  bool hasTexture,
-  double **texcoords,
-  double **normals,
-  int color[3]
-){
-  int b=color[0];
-  int g=color[1];
-  int r=color[2];
-  if(hasTexture){
-    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
-    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
-    int* texColor = texture.getColor(tx,ty);
-    b = b * (double(texColor[0]) / double(255));
-    g = g * (double(texColor[1]) / double(255));
-    r = r * (double(texColor[2]) / double(255));
-    delete [] texColor;
-  }
-  double normal[3];
-  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
-  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
-  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
-  int *finalColor = new int[3];//{int(r), int(g), int(b)};
-  finalColor[2] = r;  
-  finalColor[1] = g;
-  finalColor[0] = b;  
-  return finalColor;
-}
-
-
-int* Render::inverseShader(
-  double baryCoords[3],
-  bool hasTexture,
-  double **texcoords,
-  double **normals,
-  int color[3]
-){
-  int b=color[0];
-  int g=color[1];
-  int r=color[2];
-  if(hasTexture){
-    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
-    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
-    int* texColor = texture.getColor(tx,ty);
-    b = b * (double(texColor[0]) / double(255));
-    g = g * (double(texColor[1]) / double(255));
-    r = r * (double(texColor[2]) / double(255));
-    delete [] texColor;
-  }
-  double normal[3];
-  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
-  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
-  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
-  double *nnormal = normalize(normal,3);
-  double intensity = dot(nnormal, light , 3);
-  intensity = 1 - intensity;
-  b = b * intensity;
-  g = g * intensity;
-  r = r * intensity;
-  delete[] nnormal;
-  int *finalColor = new int[3];//{int(r), int(g), int(b)};
-  finalColor[2] = r;  
-  finalColor[1] = g;
-  finalColor[0] = b;  
-  if(intensity<=0){
-    finalColor[0] = 0;
-    finalColor[1] = 0;
-    finalColor[2] = 0;
-  }
-  return finalColor;
-
-}
-
-int *Render::randomChannelShader(
-    double baryCoords[3],
-    bool hasTexture,
-    double **texcoords,
-    double **normals,
-    int color[3])
-{
-  int b = color[0];
-  int g = color[1];
-  int r = color[2];
-  if (hasTexture){
-    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0] * baryCoords[2];
-    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1] * baryCoords[2];
-    int *texColor = texture.getColor(tx, ty);
-    b = b * int(double(texColor[0]) / 255);
-    g = g * int(double(texColor[1]) / 255);
-    r = r * int(double(texColor[2]) / 255);
-    delete[] texColor;
-  }
-  double normal[3]={
-    normals[0][0] * baryCoords[0] + normals[1][0] * baryCoords[1] + normals[2][0] * baryCoords[2],
-    normals[0][1] * baryCoords[0] + normals[1][1] * baryCoords[1] + normals[2][1] * baryCoords[2],
-    normals[0][2] * baryCoords[0] + normals[1][2] * baryCoords[1] + normals[2][2] * baryCoords[2]
-  };
-  double *nnormal = normalize(normal, 3);
-  double intensity = dot(nnormal, light, 3);
-  int aleatorio = rand();
-  int canal = rand()%3;
-  if (canal == 0){
-    b = (b + aleatorio) % 255;
-  }else if(canal == 1){
-    g = (g + aleatorio) % 255;
-  }else{
-    r = (r + aleatorio) % 255;
-  }
-  b = int(b * intensity);
-  g = int(g * intensity);
-  r = int(r * intensity);
-  delete[] nnormal;
-  int *finalColor = new int[3];
-  finalColor[2] = r;
-  finalColor[1] = g;
-  finalColor[0] = b;
-  if (intensity <= 0)
-  {
-    finalColor[0] = 0;
-    finalColor[1] = 0;
-    finalColor[2] = 0;
-  }
-  return finalColor;
-}
-
-int* Render::toonShaderGold(double baryCoords[3],
-      bool hasTexture,
-      double **texcoords,
-      double **normals,
-      int color[3]){
-  int b=color[0];
-  int g=color[1];
-  int r=color[2];
-  if(hasTexture){
-    double tx = texcoords[0][0] * baryCoords[0] + texcoords[1][0] * baryCoords[1] + texcoords[2][0]*baryCoords[2];
-    double ty = texcoords[0][1] * baryCoords[0] + texcoords[1][1] * baryCoords[1] + texcoords[2][1]*baryCoords[2];
-    int* texColor = texture.getColor(tx,ty);
-    b = b * (double(texColor[0]) / double(255));
-    g = g * (double(texColor[1]) / double(255));
-    r = r * (double(texColor[2]) / double(255));
-    delete [] texColor;
-  }
-  double normal[3];
-  normal[0] = normals[0][0]*baryCoords[0] + normals[1][0]*baryCoords[1] + normals[2][0] * baryCoords[2];
-  normal[1] = normals[0][1]*baryCoords[0] + normals[1][1]*baryCoords[1] + normals[2][1] * baryCoords[2];
-  normal[2] = normals[0][2]*baryCoords[0] + normals[1][2]*baryCoords[1] + normals[2][2] * baryCoords[2];
-  double *nnormal = normalize(normal,3);
-  double intensity = dot(nnormal, light , 3);
-  double red = 1;
-  if (intensity >=0 && intensity <0.2){
-    intensity = 0;
-    r = 0;
-    g = 255 * intensity;
-    // b = 0;
-  }else if(intensity >=0.2 && intensity < 0.4){
-    intensity = 0.2;
-    r = 255 * intensity;
-    g = 255 * intensity;
-    // b = 0;
-  }else if(intensity >=0.4 && intensity < 0.6){
-    intensity = 0.4;
-    r = 255 * intensity;
-    g = 255 * intensity;
-    // b = 0;
-  }else if(intensity >=0.6 && intensity < 0.8){
-    intensity = 0.6;
-    r = 255 * intensity;
-    g = 255 * intensity;
-    // b = 0;
-  }else if(intensity >=0.8 && intensity < 1.0){
-    intensity = 0.8;
-    r = 255 * intensity;
-    g = 255 * intensity;
-    // b = 0;
-  }else if(intensity = 1){
-    intensity = 1;
-    r = 255;
-    g = 255;
-    // b = 0;
-  }else{
-    intensity = 0;
-  }
-    b = b * intensity;
-    // g = g * intensity;
-    r = r * intensity;
-  delete[] nnormal;
-  int *finalColor = new int[3];
-  finalColor[2] = r;  
-  finalColor[1] = g;
-  finalColor[0] = b;  
-  if(intensity<=0){
-    finalColor[0] = 0;
-    finalColor[1] = 0;
-    finalColor[2] = 0;
-  }
-  return finalColor;
-}
-
-// Este es técnicamente un shader
-void Render::PostProcessEffect(
-    string pathFaces , 
-    string pathBackground){
-  Texture face;
-  face.openFile(pathFaces);
-  face.read();
-  Texture background;
-  background.openFile(pathBackground);
-  background.read();
-  glInit();
-  glClearColor(0.0, 0.0, 0.0);
-  glColor(1.0, 1.0, 1.0);
-  glCreateWindow(face.getWidth(), face.getHeight());
-  for (int i = 0; i < height; i++){
-    for (int j = 0; j < width; j++){
-      // Aqui tengo un pixel individual
-      double tx = double(j)/double(width);
-      double ty = double(i)/double(height);
-      int *faceColor = face.getColor(tx,ty);
-      if( faceColor[0] == COLOR_CLEAR[0] && 
-        faceColor[1] == COLOR_CLEAR[1] && 
-        faceColor[2] == COLOR_CLEAR[2] ){
-          int *backColor = background.getColor(tx, ty);
-          matrix[j][i][0] = backColor[0];
-          matrix[j][i][1] = backColor[1];
-          matrix[j][i][2] = backColor[2];
-          delete[] backColor;
-      }else{
-        matrix[j][i][0] = faceColor[0];
-        matrix[j][i][1] = faceColor[1];
-        matrix[j][i][2] = faceColor[2];
-      }
-      delete[] faceColor;      
-    }
-  }
-  glFinish("results/Proyecto1.bmp");
-}
