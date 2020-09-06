@@ -1,22 +1,18 @@
 # Gráficas
 Repositorio para entregas del curso Gráficas por Computadora - UVG2020
 
-## Proyecto 1
+## DR1
 
-Esta entrega mezcla funcionalidades desarrolladas a lo largo de la primera parte del curso. Carga en una misma escena varios modelos con distintos _shaders_:
+Esta entrega re escribe varios métodos del software renderer anterior, centrándose en un algoritmo de _ray tracing_. Específicamente en esta entrega, un algoritmo de _ray intercect_ para poder rendeizar esferas.
 
-- aircraft.obj (randomChannel shader)
-- model.obj (toonGold shader)
-- coca.obj (toon Shader)
-- helmet.obj (Inverse shader)
-- torre.obj (random shader)
-- andromeda.obj (toon shader)
-
-Adicionalmente, se usó el shader PostProcessEffect, como _fondo virtual_ de la escena.
-
-Para ejecutar esta entrega es necesario compilar el código usando g++, y ejecutar el código compilado:
-
+Para ejecutar esta entrega se puede ejecutar en alrhivo ```.sh``` de la siguiente manera (en sistemas Linux):
 ![Comandos](./Comandos.png "Comandos")
+
+En otro caso, ```g++``` funciona bien:
+```
+g++ *.cpp -o output #Para compilar
+./output #Para ejecutar
+```
 
 Y produce los siguientes archivos en formato BMP:
 ![Resultados](./Resultados.png "Resultados")

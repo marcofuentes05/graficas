@@ -26,10 +26,8 @@ Matrix multi(Matrix  &m0 , Matrix &m1){
 }
 
 int main(){
-  chrono::steady_clock sc; // create an object of `steady_clock` class
-  auto start = sc.now();   // start timer
-
-  // do stuff....
+  chrono::steady_clock sc;
+  auto start = sc.now();
 
   Material WHITE;
   WHITE.setDiffuse(1,1,1);
@@ -103,8 +101,8 @@ int main(){
 
   r.rtRender();
   r.glFinish("results/DR1.bmp");
-  auto end = sc.now();                                                 // end timer (starting & ending is done by measuring the time at the moment the process started & ended respectively)
-  auto time_span = static_cast<chrono::duration<double>>(end - start); // measure time span between start & end
+  auto end = sc.now();
+  auto time_span = static_cast<chrono::duration<double>>(end - start);
   cout << "Renderizado terminado! Operación duró " << time_span.count() << " segundos" << endl;
   return 0;
 }
