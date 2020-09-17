@@ -12,6 +12,8 @@
 #include "Texture.hpp"
 #include "Matrix.hpp"
 #include "Sphere.hpp"
+#include "AmbientLight.hpp"
+#include "PointLight.hpp"
 using namespace std;
 
 class Render
@@ -28,6 +30,8 @@ class Render
   Matrix projectionMatrix;
   double camPosition[3] = {0,0,0};
   double fov;
+  PointLight pointLight;
+  AmbientLight ambientLight;
 public:
   vector<Sphere> scene;
   Texture texture;
@@ -46,6 +50,7 @@ public:
   void glFinish(string name);
   void glFinishZBuffer(string name);
   void lookAt(double eye[3] , double camPosition[3]);
+  double *pointColor(Material material , Intersect intersect);
   void rtRender();
   ~Render();
 };

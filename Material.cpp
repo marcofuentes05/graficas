@@ -19,3 +19,7 @@ void Material::setDiffuse(double b, double g, double r){
 double* Material::getDiffuse(){
   return this->diffuse;
 }
+
+double Material::getSpec(){
+  return this->spec;
+}

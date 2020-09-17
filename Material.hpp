@@ -11,9 +11,11 @@ using namespace std;
 class Material
 {
   double diffuse[3] = {1,1,1};
+  double spec=0;
   public:
     Material();
     void setDiffuse(double r, double g, double b);
     double *getDiffuse();
+    double getSpec();
 };
 #endif

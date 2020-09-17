@@ -54,6 +54,34 @@ double* multiplyVM(Matrix m , double* v){
   return result;
 }
 
+bool operator == (Sphere &s0 , Sphere &s1){
+  if (s0.getCenter()[0] == s1.getCenter()[0] 
+        && s0.getCenter()[1] == s1.getCenter()[1] 
+        && s0.getCenter()[2] == s1.getCenter()[2]
+        && s0.getRadius() == s1.getRadius()){
+    return true;
+  }
+  return false;
+}
+bool compareSpheres(Sphere s0 , Sphere s1){
+  if (s0.getCenter()[0] == s1.getCenter()[0] 
+        && s0.getCenter()[1] == s1.getCenter()[1] 
+        && s0.getCenter()[2] == s1.getCenter()[2]
+        && s0.getRadius() == s1.getRadius()){
+    return true;
+  }
+  return false;
+}
+bool operator != (Sphere& s0 , Sphere& s1){
+  if (s0.getCenter()[0] == s1.getCenter()[0] 
+        && s0.getCenter()[1] == s1.getCenter()[1] 
+        && s0.getCenter()[2] == s1.getCenter()[2]
+        && s0.getRadius() == s1.getRadius()){
+    return false;
+  }
+  return true;
+}
+
 //Helper functions.
 int abs(int m){
   return (m < 0) ? -m : m;
@@ -436,9 +464,91 @@ void Render::lookAt(double eye[3], double camPosition[3]){
   delete rightN;
 }
 
+double *Render::pointColor(Material material , Intersect intersect){
+  double objectColor[3] = {
+    material.getDiffuse()[0],
+    material.getDiffuse()[1],
+    material.getDiffuse()[2]
+  };
+
+  double ambientColor[3] = {0,0,0};
+  double diffuseColor[3] = {0, 0, 0};
+  double specColor[3] = {0, 0, 0};
+
+  double shadowIntensity = 0;
+
+  if (!ambientLight.getIsNull()){
+    ambientColor[0] = ambientLight.getStrength() * ambientLight.getColor()[0]/255;
+    ambientColor[1] = ambientLight.getStrength() * ambientLight.getColor()[1]/255;
+    ambientColor[2] = ambientLight.getStrength() * ambientLight.getColor()[2]/255;
+  }
+
+  if (!pointLight.getIsNull()){
+    // Direccion de la luz en este punto
+    double *lightDirection = substract( pointLight.getPosition() , intersect.getPoint() , 3 );
+    double *lightDirNormal = normalize(lightDirection , 3);
+
+    // Calcular diffuse
+    double intensity = pointLight.getIntensity() * max(0.0 , dot(lightDirNormal,intersect.getNormal()  , 3));
+    double diffuseColor[3] = {
+      intensity * pointLight.getColor()[0] / 255,
+      intensity * pointLight.getColor()[1] / 255,
+      intensity * pointLight.getColor()[2] / 255
+    };
+
+    // Iluminacion especular
+    double *viewDir = substract( camPosition , intersect.getPoint() , 3 );
+    double *viewDirNor = normalize(viewDir , 3);
+    double reflect[3] = {
+        2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[0] - lightDirNormal[0],
+        2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[1] - lightDirNormal[1],
+        2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[2] - lightDirNormal[2]
+    };
+
+    double specularIntensity = pointLight.getIntensity() * pow(max(0.0 , dot(viewDirNor , reflect , 3)) , material.getSpec());
+    double specularColor[3] = {
+      specularIntensity * pointLight.getColor()[0] / 255,
+      specularIntensity * pointLight.getColor()[1] / 255,
+      specularIntensity * pointLight.getColor()[2] / 255
+    };
+
+    for (auto obj : scene){
+      if (compareSpheres( obj , intersect.getSceneObject() )){
+        Intersect hit = obj.ray_intersect(intersect.getPoint() , lightDirNormal);
+        if (!hit.getIsNone() && intersect.getDistance() < norm( substract(pointLight.getPosition() , intersect.getPoint() , 3) , 3 )  ){
+          shadowIntensity = 1;
+        }
+      }
+    }
+    double finalColor[3] = {
+      min(ambientColor[0] + (1-shadowIntensity) * (diffuseColor[0] + specColor[0]) * objectColor[0], 1.0),
+      min(ambientColor[1] + (1-shadowIntensity) * (diffuseColor[1] + specColor[1]) * objectColor[1], 1.0),
+      min(ambientColor[2] + (1-shadowIntensity) * (diffuseColor[2] + specColor[2]) * objectColor[2], 1.0)
+    };
+
+  }
+  return objectColor;
+}
+
 double toRad(double deg){
   return deg * PI / 180;
 }
+
+double *baryCoords( double *v1 , double* v2 , double *v3 , double *punto ){
+  double *result = new double[3];
+  try{
+    result[0] = (((v2[1] - v3[1]) * (punto[0] - v3[0]) + (v3[0] - v2[0]) * (punto[1] - v3[1])) / 
+                ((v2[1] - v3[1]) * (v1[0] - v3[0]) + (v3[0] - v2[0]) * (v1[1] - v3[1])));
+    result[1] = ( ((v3[1] - v1[1])*(punto[0] - v3[0]) + (v1[0] - v3[0])*(punto[1] - v3[1]) ) /
+                ((v2[1] - v3[1])*(v1[0] - v3[0]) + (v3[0] - v2[0])*(v1[1] - v3[1])) );
+    result[2] = 1 - result[0] - result[1];
+  }catch(...){
+    result[0] = -1;
+    result[1] = -1;
+    result[2] = -1;
+  }
+  return result;
+};
 
 void Render::rtRender(){
   for (int j = 0 ; j < height ; j++){

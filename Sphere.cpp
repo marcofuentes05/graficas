@@ -47,3 +47,11 @@ Intersect Sphere::ray_intersect(double origin[3] , double direction[3] ){
 Material Sphere::getMaterial(){
   return this-> material;
 }
+
+double Sphere::getRadius(){
+  return this->radius;
+}
+
+double *Sphere::getCenter(){
+  return this->center;
+}
