@@ -9,21 +9,28 @@
 #include <limits>
 #include "Sphere.hpp"
 using namespace std;
-
+class Sphere;
 class Intersect{
   double distance;
   double point[3];
   double normal[3];
-  Sphere sceneObject;
+  // Sphere sceneObject;
   bool isNone = false;
   public:
     Intersect();
-    Intersect(double distance, double point[3]);
+    Intersect(double distance, 
+      double point[3] , 
+      double normal[3]
+    );
+    void copyConstructor(double distance, 
+      double point[3] , 
+      double normal[3] 
+    );
     void setIsNone(bool i);
     bool getIsNone();
     double getDistance();
     double *getPoint();
     double *getNormal();
-    Sphere getSceneObject();
+    // Sphere getSceneObject();
 };
 #endif

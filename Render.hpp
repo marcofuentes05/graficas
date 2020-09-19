@@ -50,8 +50,10 @@ public:
   void glFinish(string name);
   void glFinishZBuffer(string name);
   void lookAt(double eye[3] , double camPosition[3]);
-  double *pointColor(Material material , Intersect intersect);
+  double *pointColor(Material material , Intersect intersect , Sphere sceneObject);
   void rtRender();
+  void setAmbientLight(AmbientLight a);
+  void setPointLight(PointLight p);
   ~Render();
 };
 

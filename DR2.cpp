@@ -43,7 +43,7 @@ int main(){
   Material grass;
   grass.setDiffuse(0.5, 1, 0);
 
-  double pos0 [3] = { 0, -1.9 , -7 };
+  double pos0 [3] = { 0, 0 , -7 };
   double pos1[3] =  { 0, 0    , -7 };
   double pos2[3] =  { 0, 1.9  , -7 };
   double posEyel[3] = {-0.35 , 1.7 , -5};
@@ -77,30 +77,39 @@ int main(){
   Sphere smile3 (posSmile3 , 0.04 , BLACK);
   Sphere smile4 (posSmile4 , 0.04 , BLACK);
   
+  double colorA[3] = {0.8,0.2,0.23};
+  AmbientLight ambient(0.8 , colorA);
+
+  double colorP[3] = {0.8, 0.2, 0.23};
+  double positionP[3] = {-2,2,0};
+  PointLight point(0.8 , positionP , colorP);
 
   Render r;
   r.glInit();
-  r.glClearColor( 0.5, 0.5 , 1);
+  r.glClearColor( 0.0, 0.0 , 0.0);
   r.glColor(1.0, 1.0, 1.0);
-  r.glCreateWindow(768, 1024);
+  r.glCreateWindow(768, 768);
   r.glClear();
   r.scene.push_back(s0);
-  r.scene.push_back(s1);
-  r.scene.push_back(s2);
-  r.scene.push_back(eyel);
-  r.scene.push_back(eyer);
-  r.scene.push_back(nose);
-  r.scene.push_back(button1);
-  r.scene.push_back(button2);
-  r.scene.push_back(button3);
-  r.scene.push_back(smile0);
-  r.scene.push_back(smile1);
-  r.scene.push_back(smile2);
-  r.scene.push_back(smile3);
-  r.scene.push_back(smile4);
+  // r.scene.push_back(s1);
+  // r.scene.push_back(s2);
+  // r.scene.push_back(eyel);
+  // r.scene.push_back(eyer);
+  // r.scene.push_back(nose);
+  // r.scene.push_back(button1);
+  // r.scene.push_back(button2);
+  // r.scene.push_back(button3);
+  // r.scene.push_back(smile0);
+  // r.scene.push_back(smile1);
+  // r.scene.push_back(smile2);
+  // r.scene.push_back(smile3);
+  // r.scene.push_back(smile4);
+
+  r.setPointLight(point);
+  // r.setAmbientLight(ambient);
 
   r.rtRender();
-  r.glFinish("results/DR1.bmp");
+  r.glFinish("results/DR2Test.bmp");
   auto end = sc.now();
   auto time_span = static_cast<chrono::duration<double>>(end - start);
   cout << "Renderizado terminado! Operación duró " << time_span.count() << " segundos" << endl;

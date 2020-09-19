@@ -22,4 +22,4 @@ class PointLight{
     double getIntensity();
 };
 
-#endif|
+#endif
