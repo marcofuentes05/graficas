@@ -15,6 +15,7 @@ class Material
   public:
     Material();
     void setDiffuse(double r, double g, double b);
+    void setSpec(double spec);
     double *getDiffuse();
     double getSpec();
 };

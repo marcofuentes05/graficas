@@ -26,3 +26,7 @@ double* Material::getDiffuse(){
 double Material::getSpec(){
   return this->spec;
 }
+
+void Material::setSpec(double spec){
+  this->spec = spec;
+}

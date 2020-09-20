@@ -31,21 +31,28 @@ int main(){
 
   Material WHITE;
   WHITE.setDiffuse(1,1,1);
+  WHITE.setSpec(64);
   Material BLACK;
   BLACK.setDiffuse(0,0,0);
+  BLACK.setSpec(16);
   Material GREY;
   GREY.setDiffuse(0.4, 0.4, 0.4 );
+  GREY.setSpec(16);
   Material ORANGE;
   ORANGE.setDiffuse(1,0.49,0.31);
+  ORANGE.setSpec(16);
 
   Material brick;
   brick.setDiffuse(0.8, 0.25, 0.25 );
+  brick.setSpec(16);
   Material grass;
   grass.setDiffuse(0.5, 1, 0);
+  grass.setSpec(32);
 
-  double pos0 [3] = { 0, 0 , -7 };
-  double pos1[3] =  { 0, 0    , -7 };
+  double pos0 [3] = { 0, -1.9 , -7 };
+  double pos1[3] =  { -0, 0 , -7 };
   double pos2[3] =  { 0, 1.9  , -7 };
+  double pos3[3] = {0, -0.5, -3};
   double posEyel[3] = {-0.35 , 1.7 , -5};
   double posEyer[3] = {0.35  , 1.7 , -5};
   double posNose[3] = {0, 1.3, -5};
@@ -58,9 +65,10 @@ int main(){
   double posSmile3[3] = { 0.15 , 0.9 , -5};
   double posSmile4[3] = { 0.3 , 1 , -5};
 
-  Sphere s0(pos0, 0.9 ,  WHITE);
-  Sphere s1(pos1, 1.2, WHITE);
+  Sphere s0(pos0, 1.5 ,  WHITE);
+  Sphere s1(pos1, 1.25, WHITE);
   Sphere s2(pos2, 1, WHITE);
+  Sphere s3(pos3, 0.25, ORANGE);
 
   Sphere eyel(posEyel, 0.1 , BLACK);
   Sphere eyer(posEyer, 0.1 , BLACK);
@@ -78,38 +86,49 @@ int main(){
   Sphere smile4 (posSmile4 , 0.04 , BLACK);
   
   double colorA[3] = {0.8,0.2,0.23};
-  AmbientLight ambient(0.8 , colorA);
+  AmbientLight ambient(0.1 , colorA);
 
   double colorP[3] = {1 , 1 , 1};
-  double positionP[3] = {1,1,0};
-  PointLight point(0.8 , positionP , colorP);
+  double colorP1[3] = {1, 1, 1};
+  double colorP2[3] = {1, 1, 1};
+  double positionP[3] = {-2,2,0};
+  double positionP1[3] = {2, 2, 0};
+  double positionP2[3] = {0, -2, 0};
+  PointLight point(1.0 , positionP , colorP);
+  PointLight point1(0.5, positionP1, colorP1);
+  PointLight point2(0.25, positionP2, colorP2);
 
   Render r;
   r.glInit();
   r.glClearColor( 0.0, 0.0 , 0.0);
   r.glColor(1.0, 1.0, 1.0);
-  r.glCreateWindow(768, 768);
+  r.glCreateWindow(500, 500);
   r.glClear();
-  r.scene.push_back(s0);
-  // r.scene.push_back(s1);
-  // r.scene.push_back(s2);
-  // r.scene.push_back(eyel);
-  // r.scene.push_back(eyer);
-  // r.scene.push_back(nose);
-  // r.scene.push_back(button1);
-  // r.scene.push_back(button2);
-  // r.scene.push_back(button3);
-  // r.scene.push_back(smile0);
-  // r.scene.push_back(smile1);
-  // r.scene.push_back(smile2);
-  // r.scene.push_back(smile3);
-  // r.scene.push_back(smile4);
-
   r.setPointLight(point);
+  r.setPointLight(point1);
+  r.setPointLight(point2);
   r.setAmbientLight(ambient);
 
+
+  r.scene.push_back(s0);
+  r.scene.push_back(s1);
+  r.scene.push_back(s2);
+  // r.scene.push_back(s3);
+  r.scene.push_back(eyel);
+  r.scene.push_back(eyer);
+  r.scene.push_back(nose);
+  r.scene.push_back(button1);
+  r.scene.push_back(button2);
+  r.scene.push_back(button3);
+  r.scene.push_back(smile0);
+  r.scene.push_back(smile1);
+  r.scene.push_back(smile2);
+  r.scene.push_back(smile3);
+  r.scene.push_back(smile4);
+
+
   r.rtRender();
-  r.glFinish("results/DR2Test.bmp");
+  r.glFinish("results/Snowman.bmp");
   auto end = sc.now();
   auto time_span = static_cast<chrono::duration<double>>(end - start);
   cout << "Renderizado terminado! Operación duró " << time_span.count() << " segundos" << endl;

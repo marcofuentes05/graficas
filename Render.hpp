@@ -30,7 +30,7 @@ class Render
   Matrix projectionMatrix;
   double camPosition[3] = {0,0,0};
   double fov;
-  PointLight pointLight;
+  vector<PointLight> pointLight;
   AmbientLight ambientLight;
 public:
   vector<Sphere> scene;

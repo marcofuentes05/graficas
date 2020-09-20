@@ -1,9 +1,11 @@
 # Gráficas
 Repositorio para entregas del curso Gráficas por Computadora - UVG2020
 
-## DR1
+## DR2
 
-Esta entrega re escribe varios métodos del software renderer anterior, centrándose en un algoritmo de _ray tracing_. Específicamente en esta entrega, un algoritmo de _ray intercept_ para poder rendeizar esferas.
+Esta entrega amplia las funcionalidades de DR1, agregando el renderizado de sombras, proyecciones y un Phong Shader.
+
+Además, soporta una iluminación de ambiente y cualquier cantidad de luces puntuales (point lights).
 
 Para ejecutar esta entrega se puede ejecutar en alrhivo ```.sh``` de la siguiente manera (en sistemas Linux):
 ![Comandos](./Comandos.png "Comandos")
@@ -16,4 +18,8 @@ g++ *.cpp -o output #Para compilar
 
 Y produce el siguiente archivo en formato BMP:
 
-![Resultados](./Resultados.png "Resultados")
+![Resultados](./Snowman.png "Resultados")
+
+Para demostrar la funcionalidad de varias luces puntuales y una luz ambiental, se produjo esta muestra:
+
+![Showoff](./Showoff.png "3 Luces")

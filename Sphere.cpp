@@ -25,18 +25,18 @@ Intersect Sphere::ray_intersect(double origin[3] , double direction[3] ){
   double *L = substract(this->center , origin , 3); //DELETE THIS
   double tca = dot(L, direction , 3);
   double l = norm(L,3);
-  double d = pow( (l*l - tca*tca) ,0.5);
+  double d = sqrt(pow(l,2) - pow(tca , 2));
   if (d>radius){
     result.setIsNone(true);
     return result;
   }
-  double thc = pow( radius * radius - d*d , 0.5);
+  double thc = sqrt(pow(radius , 2) - pow(d , 2));
   double t0 = tca -thc;
   double t1 = tca + thc;
   if (t0 < 0){
     t0 = t1;
   }
-  if (t0<0){
+  if (t0<0.1){
     result.setIsNone(true);
     return result;
   }
@@ -45,13 +45,15 @@ Intersect Sphere::ray_intersect(double origin[3] , double direction[3] ){
     origin[1] + t0 * direction[1],
     origin[2] + t0 * direction[2]
   };
-
-  double *normal= substract(hit , center , 3) ; //DELETE THIS
-  double *normalNormalized = normalize( normal , 3);
+  double *normal= substract(hit , this->center , 3) ; //DELETE THIS
+  double normalNormalized[3] = {
+    normal[0] / norm(normal , 3),
+    normal[1] / norm(normal , 3),
+    normal[2] / norm(normal , 3)
+  };
 
   Intersect r0(t0 , hit , normalNormalized );
   delete normal;
-  delete normalNormalized;
   delete L;
   
   return r0;
