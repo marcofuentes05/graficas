@@ -7,7 +7,10 @@
 using namespace std;
 
 Material::Material(){
-  // cout << "Constructor vacío" << endl;
+  diffuse[0] = 1.0;
+  diffuse[1] = 1.0;
+  diffuse[2] = 1.0;
+  spec = 0;
 }
 
 void Material::setDiffuse(double b, double g, double r){

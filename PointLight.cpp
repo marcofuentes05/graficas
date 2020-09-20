@@ -9,7 +9,7 @@
 using namespace std;
 
 PointLight::PointLight(){
-  cout << "POINT LIGHT CONSTRUCTOR VACIO" << endl;
+  
 }
 
 PointLight::PointLight(double intensity, double position[3], double color[3]){

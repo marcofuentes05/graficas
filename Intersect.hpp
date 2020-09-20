@@ -31,6 +31,7 @@ class Intersect{
     double getDistance();
     double *getPoint();
     double *getNormal();
+    void toString();
     // Sphere getSceneObject();
 };
 #endif

@@ -58,7 +58,7 @@ int main(){
   double posSmile3[3] = { 0.15 , 0.9 , -5};
   double posSmile4[3] = { 0.3 , 1 , -5};
 
-  Sphere s0(pos0, 1.5 ,  WHITE);
+  Sphere s0(pos0, 0.9 ,  WHITE);
   Sphere s1(pos1, 1.2, WHITE);
   Sphere s2(pos2, 1, WHITE);
 
@@ -80,8 +80,8 @@ int main(){
   double colorA[3] = {0.8,0.2,0.23};
   AmbientLight ambient(0.8 , colorA);
 
-  double colorP[3] = {0.8, 0.2, 0.23};
-  double positionP[3] = {-2,2,0};
+  double colorP[3] = {1 , 1 , 1};
+  double positionP[3] = {1,1,0};
   PointLight point(0.8 , positionP , colorP);
 
   Render r;
@@ -106,7 +106,7 @@ int main(){
   // r.scene.push_back(smile4);
 
   r.setPointLight(point);
-  // r.setAmbientLight(ambient);
+  r.setAmbientLight(ambient);
 
   r.rtRender();
   r.glFinish("results/DR2Test.bmp");

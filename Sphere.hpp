@@ -18,7 +18,7 @@ class Sphere{
   public: 
     Sphere();
     Sphere(double center[3] , double radius  , Material material);
-    Intersect *ray_intersect(double origin[3] , double direction[3]);
+    Intersect ray_intersect(double origin[3] , double direction[3]);
     Material getMaterial();
     double* getCenter();
     double getRadius();

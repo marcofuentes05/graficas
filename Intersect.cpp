@@ -59,3 +59,14 @@ double *Intersect::getNormal(){
 // Sphere Intersect::getSceneObject(){
 //   return this->sceneObject;
 // }
+
+void Intersect::toString(){
+  cout << "distance: " << to_string(distance) << endl;
+  cout << "point0: " << to_string(point[0]) << endl;
+  cout << "point1: " << to_string(point[1]) << endl;
+  cout << "point2: " << to_string(point[2]) << endl;
+  cout << "normal0: " << to_string(normal[0]) << endl;
+  cout << "normal1: " << to_string(normal[1]) << endl;
+  cout << "normal2: " << to_string(normal[2]) << endl;
+  cout << "isNone: " << to_string(isNone) << endl;
+}

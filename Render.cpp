@@ -454,8 +454,6 @@ void Render::lookAt(double eye[3], double camPosition[3]){
   };
 
   camMatrix = Matrix(matriz);
-  // camMatrix.toString();
-  // exit(1);
 
   delete upN;
   delete up;
@@ -475,7 +473,6 @@ double *Render::pointColor(Material material , Intersect intersect , Sphere scen
   double specColor[3] = {0, 0, 0};
 
   double shadowIntensity = 0;
-
   if (!ambientLight.getIsNull()){
     ambientColor[0] = ambientLight.getStrength() * (double)ambientLight.getColor()[0];
     ambientColor[1] = ambientLight.getStrength() * (double)ambientLight.getColor()[1];
@@ -486,31 +483,33 @@ double *Render::pointColor(Material material , Intersect intersect , Sphere scen
     // Direccion de la luz en este punto
     double *lightDirection = substract( pointLight.getPosition() , intersect.getPoint() , 3 );
     double *lightDirNormal = normalize(lightDirection , 3);
-
+   
     // Calcular diffuse
-    double intensity = pointLight.getIntensity() * max(0.0 , -1.0 * dot(lightDirNormal , intersect.getNormal()  , 3));
-    diffuseColor[0] = intensity * double(pointLight.getColor()[0]); // / 255.0;
-    diffuseColor[1] = intensity * double(pointLight.getColor()[1]); // / 255.0;
-    diffuseColor[2] = intensity * double(pointLight.getColor()[2]); // / 255.0;
+    double* intersectNormal = intersect.getNormal();
+    double *intersectNormalNormalized = normalize(intersectNormal , 3);
+    double intensity = 1 /* pointLight.getIntensity() */ * max(0.0 , dot(lightDirNormal , intersect.getNormal()  , 3));
+    diffuseColor[0] = intensity * double(pointLight.getColor()[0]);
+    diffuseColor[1] = intensity * double(pointLight.getColor()[1]);
+    diffuseColor[2] = intensity * double(pointLight.getColor()[2]);
 
     // Iluminacion especular
     double *viewDir = substract( camPosition , intersect.getPoint() , 3 );
     double *viewDirNor = normalize(viewDir , 3);
     double reflect[3] = {
-        2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[0] - lightDirNormal[0],
-        2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[1] - lightDirNormal[1],
-        2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[2] - lightDirNormal[2]
+      2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[0] - lightDirNormal[0],
+      2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[1] - lightDirNormal[1],
+      2 * dot(intersect.getNormal(), lightDirNormal, 3) * intersect.getNormal()[2] - lightDirNormal[2]
     };
 
     double specularIntensity = pointLight.getIntensity() * pow(max(0.0 , dot(viewDirNor , reflect , 3)) , material.getSpec());
-    specColor[0] = specularIntensity * (double)pointLight.getColor()[0]; // / 255.0;
-    specColor[1] = specularIntensity * (double)pointLight.getColor()[1]; // / 255.0;
-    specColor[2] = specularIntensity * (double)pointLight.getColor()[2]; // / 255.0;
+    specColor[0] = specularIntensity * (double)pointLight.getColor()[0];
+    specColor[1] = specularIntensity * (double)pointLight.getColor()[1];
+    specColor[2] = specularIntensity * (double)pointLight.getColor()[2];
 
     for (auto obj : scene){
       if (compareSpheres( obj , sceneObject )){
-        Intersect* hit = obj.ray_intersect(intersect.getPoint() , lightDirNormal);
-        if (!hit->getIsNone() && intersect.getDistance() < norm( substract(pointLight.getPosition() , intersect.getPoint() , 3) , 3 )  ){
+        Intersect hit = obj.ray_intersect(intersect.getPoint() , lightDirNormal);
+        if (!hit.getIsNone() && intersect.getDistance() < norm( substract(pointLight.getPosition() , intersect.getPoint() , 3) , 3 )  ){
           shadowIntensity = 1;
         }
       }
@@ -522,20 +521,6 @@ double *Render::pointColor(Material material , Intersect intersect , Sphere scen
     delete viewDirNor;
 
   }
-  cout << "Shadow intensity: " << shadowIntensity << endl;
-  cout << "Ambient color 0: " << ambientColor[0] << endl;
-  cout << "Ambient color 1: " << ambientColor[1] << endl;
-  cout << "Ambient color 2: " << ambientColor[2] << endl;
-  cout << "Diffuse color 0: " <<diffuseColor[0] << endl;
-  cout << "Diffuse color 1: " <<diffuseColor[1] << endl;
-  cout << "Diffuse color 2: " <<diffuseColor[2] << endl;
-
-  cout << "Spec color 0: " << specColor[0] << endl;
-  cout << "Spec color 1: " << specColor[1] << endl;
-  cout << "Spec color 2: " << specColor[2] << endl;
-  cout << "Object color0: " << objectColor[0] << endl; 
-  cout << "Object color1: " << objectColor[1] << endl; 
-  cout << "Object color2: " << objectColor[2] << endl; 
   // Formula de Iluminacion 
   objectColor[0] = min(1.0 , ambientColor[0] + (1.0-shadowIntensity) * (diffuseColor[0] + specColor[0]) * objectColor[0]);
   objectColor[1] = min(1.0 , ambientColor[1] + (1.0-shadowIntensity) * (diffuseColor[1] + specColor[1]) * objectColor[1]);
@@ -576,19 +561,17 @@ void Render::rtRender(){
 
       px = px * r;
       py = py * t;
-
       double direction[3] = {px,py,-1}; //Camara siempre apunta a -z
       double *normalDirection = normalize(direction,3); // DELETE THIS
       Material material;
       bool hasM = false;
-      for (auto item : scene){
-        Intersect* intersect = item.ray_intersect(camPosition , normalDirection);
-        if (!intersect->getIsNone()){ 
-          if ( intersect->getDistance() < zbuffer[i][j] ){
-            zbuffer[i][j] = intersect->getDistance();
-            material = item.getMaterial();
-            // double *diffuse = material.getDiffuse();
-            double *pColor = pointColor(material, (Intersect &)intersect, item);
+      for (auto obj : scene){
+        Intersect hit = obj.ray_intersect(camPosition , normalDirection);
+        if (!hit.getIsNone()){ 
+          if ( hit.getDistance() < zbuffer[i][j] ){
+            zbuffer[i][j] = hit.getDistance();
+            material = obj.getMaterial();
+            double *pColor = pointColor(material, hit, obj);
             int pixelColor[3] = {
               int(pColor[0]*255.0),
               int(pColor[1]*255.0),
