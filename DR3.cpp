@@ -124,7 +124,7 @@ int main(){
   double positionP[3] = {0,0,0};
   double positionP1[3] = {2, 2, 0};
   double positionP2[3] = {0, -2, 0};
-  PointLight point(1.0 , positionP , colorP);
+  PointLight point(0.8 , positionP , colorP);
   PointLight point1(0.5, positionP1, colorP1);
   PointLight point2(0.25, positionP2, colorP2);
 
