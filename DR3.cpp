@@ -10,6 +10,8 @@
 #include "Texture.hpp"
 #include "Matrix.hpp"
 #include "Sphere.hpp"
+#include "Plane.hpp"
+#include "AABB.hpp"
 using namespace std;
 Matrix multi(Matrix  &m0 , Matrix &m1){
   Matrix result;
@@ -49,8 +51,36 @@ int main(){
   grass.setDiffuse(0.5, 1, 0);
   grass.setSpec(32);
 
+  double centerc0[3] = { -1 , -1 , -7 };
+  double sizec0 = 1;
+  AABB c0( centerc0 , sizec0 , brick );
+
+  double centerc1[3] = {1, 1, -7};
+  double sizec1 = 1;
+  AABB c1(centerc1, sizec1, brick);
+
+  double centerp0[3] = {0, -2, -7};
+  double n0[3] = {0,1,0} ;
+  Plane p0(centerp0 , n0 , brick);
+
+  double centerp1[3] = {-2, 0 , -7};
+  double n1[3] = {1, 0, 0};
+  Plane p1(centerp1, n1, brick);
+
+  double centerp2[3] = {2, 0, -7};
+  double n2[3] = {-1, 0, 0};
+  Plane p2(centerp2, n2, brick);
+
+  double centerp3[3] = {0, 2, -7};
+  double n3[3] = {0, -1, 0};
+  Plane p3(centerp3, n3, brick);
+
+  double centerp4[3] = {0, 0, -7};
+  double n4[3] = {0, 0, 1};
+  Plane p4(centerp4, n4, brick);
+
   double pos0 [3] = { 0, -1.9 , -7 };
-  double pos1[3] =  { -0, 0 , -7 };
+  double pos1[3] =  { 0, 0 , -7 };
   double pos2[3] =  { 0, 1.9  , -7 };
   double pos3[3] = {0, -0.5, -3};
   double posEyel[3] = {-0.35 , 1.7 , -5};
@@ -66,7 +96,7 @@ int main(){
   double posSmile4[3] = { 0.3 , 1 , -5};
 
   Sphere s0(pos0, 1.5 ,  WHITE);
-  Sphere s1(pos1, 1.25, WHITE);
+  Sphere s1(pos1, 1.25, brick);
   Sphere s2(pos2, 1, WHITE);
   Sphere s3(pos3, 0.25, ORANGE);
 
@@ -91,10 +121,10 @@ int main(){
   double colorP[3] = {1 , 1 , 1};
   double colorP1[3] = {1, 1, 1};
   double colorP2[3] = {1, 1, 1};
-  double positionP[3] = {-2,2,0};
+  double positionP[3] = {0,0,0};
   double positionP1[3] = {2, 2, 0};
   double positionP2[3] = {0, -2, 0};
-  PointLight point(1.0 , positionP , colorP);
+  PointLight point(0.8 , positionP , colorP);
   PointLight point1(0.5, positionP1, colorP1);
   PointLight point2(0.25, positionP2, colorP2);
 
@@ -105,30 +135,37 @@ int main(){
   r.glCreateWindow(500, 500);
   r.glClear();
   r.setPointLight(point);
-  r.setPointLight(point1);
-  r.setPointLight(point2);
-  r.setAmbientLight(ambient);
+  // r.setPointLight(point1);
+  // r.setPointLight(point2);
+  // r.setAmbientLight(ambient);
 
 
-  r.scene.push_back(s0);
-  r.scene.push_back(s1);
-  r.scene.push_back(s2);
+  // r.scene.push_back(s0);
+  // r.scene.push_back(s1);
+  // r.scene.push_back(s2);
+  r.scenePlanes.push_back(p1);
+  r.scenePlanes.push_back(p2);
+  r.scenePlanes.push_back(p3);
+  r.scenePlanes.push_back(p4);
+  r.scenePlanes.push_back(p0);
+  r.sceneAABBs.push_back(c0);
+  r.sceneAABBs.push_back(c1);
   // r.scene.push_back(s3);
-  r.scene.push_back(eyel);
-  r.scene.push_back(eyer);
-  r.scene.push_back(nose);
-  r.scene.push_back(button1);
-  r.scene.push_back(button2);
-  r.scene.push_back(button3);
-  r.scene.push_back(smile0);
-  r.scene.push_back(smile1);
-  r.scene.push_back(smile2);
-  r.scene.push_back(smile3);
-  r.scene.push_back(smile4);
+  // r.scene.push_back(eyel);
+  // r.scene.push_back(eyer);
+  // r.scene.push_back(nose);
+  // r.scene.push_back(button1);
+  // r.scene.push_back(button2);
+  // r.scene.push_back(button3);
+  // r.scene.push_back(smile0);
+  // r.scene.push_back(smile1);
+  // r.scene.push_back(smile2);
+  // r.scene.push_back(smile3);
+  // r.scene.push_back(smile4);
 
 
   r.rtRender();
-  r.glFinish("results/Snowman.bmp");
+  r.glFinish("results/DR3.bmp");
   auto end = sc.now();
   auto time_span = static_cast<chrono::duration<double>>(end - start);
   cout << "Renderizado terminado! Operación duró " << time_span.count() << " segundos" << endl;
