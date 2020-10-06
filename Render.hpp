@@ -12,6 +12,8 @@
 #include "Texture.hpp"
 #include "Matrix.hpp"
 #include "Sphere.hpp"
+#include "Plane.hpp"
+#include "AABB.hpp"
 #include "AmbientLight.hpp"
 #include "PointLight.hpp"
 using namespace std;
@@ -34,6 +36,8 @@ class Render
   AmbientLight ambientLight;
 public:
   vector<Sphere> scene;
+  vector<Plane> scenePlanes;
+  vector<AABB> sceneAABBs;
   Texture texture;
   double light[3]={0,0,0};
   void glInit();
@@ -51,6 +55,8 @@ public:
   void glFinishZBuffer(string name);
   void lookAt(double eye[3] , double camPosition[3]);
   double *pointColor(Material material , Intersect intersect , Sphere sceneObject);
+  double *pointColor(Material material, Intersect intersect, Plane sceneObject);
+  double *pointColor(Material material, Intersect intersect, AABB sceneObject);
   void rtRender();
   void setAmbientLight(AmbientLight a);
   void setPointLight(PointLight p);

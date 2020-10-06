@@ -63,6 +63,24 @@ bool operator == (Sphere &s0 , Sphere &s1){
   }
   return false;
 }
+bool comparePlanes(Plane s0 , Plane s1){
+  if (s0.getCenter()[0] == s1.getCenter()[0] 
+        && s0.getCenter()[1] == s1.getCenter()[1] 
+        && s0.getCenter()[2] == s1.getCenter()[2]){
+    return true;
+  }
+  return false;
+}
+bool compareAABBs(AABB s0 , AABB s1){
+  if (s0.getCenter()[0] == s1.getCenter()[0] 
+        && s0.getCenter()[1] == s1.getCenter()[1] 
+        && s0.getCenter()[2] == s1.getCenter()[2]
+        && s0.getSize() == s1.getSize()){
+    return true;
+  }
+  return false;
+}
+
 bool compareSpheres(Sphere s0 , Sphere s1){
   if (s0.getCenter()[0] == s1.getCenter()[0] 
         && s0.getCenter()[1] == s1.getCenter()[1] 
@@ -462,6 +480,152 @@ void Render::lookAt(double eye[3], double camPosition[3]){
   delete rightN;
 }
 
+double *Render::pointColor(Material material , Intersect intersect , AABB sceneObject){
+  double *objectColor = new double[3];
+  objectColor[0] = (double) material.getDiffuse()[0];
+  objectColor[1] = (double) material.getDiffuse()[1];
+  objectColor[2] = (double) material.getDiffuse()[2];
+
+  double ambientColor[3] = {0,0,0};
+  double diffuseColor[3] = {0, 0, 0};
+  double specColor[3] = {0, 0, 0};
+
+  double shadowIntensity = 0;
+  if (!ambientLight.getIsNull()){
+    ambientColor[0] = ambientLight.getStrength() * (double)ambientLight.getColor()[0];
+    ambientColor[1] = ambientLight.getStrength() * (double)ambientLight.getColor()[1];
+    ambientColor[2] = ambientLight.getStrength() * (double)ambientLight.getColor()[2];
+  }
+  double intensity = 0;
+  double specularIntensity = 0;
+  if (pointLight.size() > 0 ){
+    for (auto point : pointLight){
+      // Direccion de la luz en este punto
+      double *lightDirection = substract( point.getPosition() , intersect.getPoint() , 3 );
+      double *lightDirNormal = normalize(lightDirection , 3);
+    
+      // Calcular diffuse
+      double* intersectNormal = intersect.getNormal();
+      double *intersectNormalNormalized = normalize(intersectNormal , 3);
+      intensity +=  point.getIntensity() * max( 0.0 , dot(lightDirNormal , intersect.getNormal()  , 3));
+      double *pColor = point.getColor();
+      diffuseColor[0] = intensity * double(pColor[0]);
+      diffuseColor[1] = intensity * double(pColor[1]);
+      diffuseColor[2] = intensity * double(pColor[2]);
+
+      // Iluminacion especular
+      double *viewDir = substract( camPosition , intersect.getPoint() , 3 );
+      double *viewDirNor = normalize(viewDir , 3);
+      double reflect[3] = {
+        2 * dot(intersectNormal, lightDirNormal, 3) * intersectNormal[0] - lightDirNormal[0],
+        2 * dot(intersectNormal, lightDirNormal, 3) * intersectNormal[1] - lightDirNormal[1],
+        2 * dot(intersectNormal, lightDirNormal, 3) * intersectNormal[2] - lightDirNormal[2]
+      };
+
+      specularIntensity += point.getIntensity() * pow(max(0.0 , dot(viewDirNor , reflect , 3)) , material.getSpec());
+      specColor[0] = specularIntensity * (double)point.getColor()[0];
+      specColor[1] = specularIntensity * (double)point.getColor()[1];
+      specColor[2] = specularIntensity * (double)point.getColor()[2];
+
+      for (auto obj : sceneAABBs){
+        if (!compareAABBs( obj , sceneObject )){
+          Intersect hit = obj.ray_intersect(intersect.getPoint() , lightDirNormal);
+          if (!hit.getIsNone() && intersect.getDistance() < norm( substract(point.getPosition() , intersect.getPoint() , 3) , 3 )  ){
+            shadowIntensity += 1.0/(1+pointLight.size());
+          }
+        }
+      }
+      
+      delete lightDirection;
+      delete lightDirNormal;
+      delete viewDir;
+      delete viewDirNor;
+    }
+
+  }
+  // Formula de Iluminacion 
+  objectColor[0] = double(ambientColor[0] + ((1.0-shadowIntensity) * (diffuseColor[0] + specColor[0]) * objectColor[0]));
+  objectColor[0] = min( 1.0 , double(objectColor[0]));
+  objectColor[1] = double(ambientColor[1] + ((1.0-shadowIntensity) * (diffuseColor[1] + specColor[1]) * objectColor[1]));
+  objectColor[1] = min( 1.0 , double(objectColor[1]));
+  objectColor[2] = double(ambientColor[2] + ((1.0-shadowIntensity) * (diffuseColor[2] + specColor[2]) * objectColor[2]));
+  objectColor[2] = min( 1.0 , double(objectColor[2]));
+  return objectColor;
+}
+
+double *Render::pointColor(Material material , Intersect intersect , Plane sceneObject){
+  double *objectColor = new double[3];
+  objectColor[0] = (double) material.getDiffuse()[0];
+  objectColor[1] = (double) material.getDiffuse()[1];
+  objectColor[2] = (double) material.getDiffuse()[2];
+
+  double ambientColor[3] = {0,0,0};
+  double diffuseColor[3] = {0, 0, 0};
+  double specColor[3] = {0, 0, 0};
+
+  double shadowIntensity = 0;
+  if (!ambientLight.getIsNull()){
+    ambientColor[0] = ambientLight.getStrength() * (double)ambientLight.getColor()[0];
+    ambientColor[1] = ambientLight.getStrength() * (double)ambientLight.getColor()[1];
+    ambientColor[2] = ambientLight.getStrength() * (double)ambientLight.getColor()[2];
+  }
+  double intensity = 0;
+  double specularIntensity = 0;
+  if (pointLight.size() > 0 ){
+    for (auto point : pointLight){
+      // Direccion de la luz en este punto
+      double *lightDirection = substract( point.getPosition() , intersect.getPoint() , 3 );
+      double *lightDirNormal = normalize(lightDirection , 3);
+    
+      // Calcular diffuse
+      double* intersectNormal = intersect.getNormal();
+      double *intersectNormalNormalized = normalize(intersectNormal , 3);
+      intensity +=  point.getIntensity() * max( 0.0 , dot(lightDirNormal , intersect.getNormal()  , 3));
+      double *pColor = point.getColor();
+      diffuseColor[0] = intensity * double(pColor[0]);
+      diffuseColor[1] = intensity * double(pColor[1]);
+      diffuseColor[2] = intensity * double(pColor[2]);
+
+      // Iluminacion especular
+      double *viewDir = substract( camPosition , intersect.getPoint() , 3 );
+      double *viewDirNor = normalize(viewDir , 3);
+      double reflect[3] = {
+        2 * dot(intersectNormal, lightDirNormal, 3) * intersectNormal[0] - lightDirNormal[0],
+        2 * dot(intersectNormal, lightDirNormal, 3) * intersectNormal[1] - lightDirNormal[1],
+        2 * dot(intersectNormal, lightDirNormal, 3) * intersectNormal[2] - lightDirNormal[2]
+      };
+
+      specularIntensity += point.getIntensity() * pow(max(0.0 , dot(viewDirNor , reflect , 3)) , material.getSpec());
+      specColor[0] = specularIntensity * (double)point.getColor()[0];
+      specColor[1] = specularIntensity * (double)point.getColor()[1];
+      specColor[2] = specularIntensity * (double)point.getColor()[2];
+
+      for (auto obj : scenePlanes){
+        if (!comparePlanes( obj , sceneObject )){
+          Intersect hit = obj.ray_intersect(intersect.getPoint() , lightDirNormal);
+          if (!hit.getIsNone() && intersect.getDistance() < norm( substract(point.getPosition() , intersect.getPoint() , 3) , 3 )  ){
+            shadowIntensity += 1.0/(1+pointLight.size());
+          }
+        }
+      }
+      
+      delete lightDirection;
+      delete lightDirNormal;
+      delete viewDir;
+      delete viewDirNor;
+    }
+
+  }
+  // Formula de Iluminacion 
+  objectColor[0] = double(ambientColor[0] + ((1.0-shadowIntensity) * (diffuseColor[0] + specColor[0]) * objectColor[0]));
+  objectColor[0] = min( 1.0 , double(objectColor[0]));
+  objectColor[1] = double(ambientColor[1] + ((1.0-shadowIntensity) * (diffuseColor[1] + specColor[1]) * objectColor[1]));
+  objectColor[1] = min( 1.0 , double(objectColor[1]));
+  objectColor[2] = double(ambientColor[2] + ((1.0-shadowIntensity) * (diffuseColor[2] + specColor[2]) * objectColor[2]));
+  objectColor[2] = min( 1.0 , double(objectColor[2]));
+  return objectColor;
+}
+
 double *Render::pointColor(Material material , Intersect intersect , Sphere sceneObject){
   double *objectColor = new double[3];
   objectColor[0] = (double) material.getDiffuse()[0];
@@ -514,10 +678,6 @@ double *Render::pointColor(Material material , Intersect intersect , Sphere scen
           Intersect hit = obj.ray_intersect(intersect.getPoint() , lightDirNormal);
           if (!hit.getIsNone() && intersect.getDistance() < norm( substract(point.getPosition() , intersect.getPoint() , 3) , 3 )  ){
             shadowIntensity += 1.0/(1+pointLight.size());
-            // objectColor[0] = 0;
-            // objectColor[1] = 0;
-            // objectColor[2] = 0;
-            // return objectColor;
           }
         }
       }
@@ -579,6 +739,38 @@ void Render::rtRender(){
       for (auto obj : scene){
         Intersect hit = obj.ray_intersect(camPosition , normalDirection);
         if (!hit.getIsNone()){ 
+          if ( hit.getDistance() < zbuffer[i][j] ){
+            zbuffer[i][j] = hit.getDistance();
+            material = obj.getMaterial();
+            double *pColor = pointColor(material, hit, obj);
+            int pixelColor[3] = {
+              int(pColor[0] * 255),
+              int(pColor[1] * 255),
+              int(pColor[2] * 255)
+            };
+            glVertexAbs( j , i , pixelColor);
+          }
+        }
+      } 
+      for (auto obj : scenePlanes){
+        Intersect hit = obj.ray_intersect(camPosition , normalDirection);
+        if (!hit.getIsNone()){ 
+          if ( hit.getDistance() < zbuffer[i][j] ){
+            zbuffer[i][j] = hit.getDistance();
+            material = obj.getMaterial();
+            double *pColor = pointColor(material, hit, obj);
+            int pixelColor[3] = {
+              int(pColor[0] * 255),
+              int(pColor[1] * 255),
+              int(pColor[2] * 255)
+            };
+            glVertexAbs( j , i , pixelColor);
+          }
+        }
+      } 
+      for (auto obj : sceneAABBs){
+        Intersect hit = obj.ray_intersect(camPosition , normalDirection);
+        if (!hit.getIsNone()){
           if ( hit.getDistance() < zbuffer[i][j] ){
             zbuffer[i][j] = hit.getDistance();
             material = obj.getMaterial();
